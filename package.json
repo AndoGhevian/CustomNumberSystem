@@ -1,0 +1,32 @@
+{
+  "name": "custom-number-system",
+  "version": "1.0.0",
+  "description": "Work with numbers of custom system you defined",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon --watch src/ --ext ts --exec 'tsc && node dist/index.js'",
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "ns",
+    "custom"
+  ],
+  "author": "Ando",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AndoGhevian/CustomNumberSystem.git"
+  },
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^14.11.2",
+    "nodemon": "^2.0.4"
+  },
+  "dependencies": {
+    "joi": "^17.2.1",
+    "jsbi": "^3.1.4"
+  }
+}
