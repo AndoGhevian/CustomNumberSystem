@@ -10,14 +10,22 @@ import {
 export const constructorSchema = {
     main: Joi.object({
         ns: Joi.any(),
-        number: Joi.any()
-            .default(0),
+        number: [
+            Joi.array()
+                .items(
+                    Joi.any()
+                        .default(0)
+                ),
+            Joi.any()
+                .default(0),
+        ],
         validate: Joi.any()
             .default(false)
     }),
     niche: Joi.object({
         ns: Joi.object()
-            .instance(NumberSystem),
+            .instance(NumberSystem)
+            .required(),
         number: [
             Joi.number()
                 .min(0)
@@ -27,10 +35,16 @@ export const constructorSchema = {
                 .pattern(/^\d+$/, 'number string'),
             Joi.object()
                 .instance(NSNumber),
+            Joi.array()
+                .items(
+                    Joi.number()
+                        .min(0)
+                        .integer()
+                        .less(Joi.ref('...ns.base'))
+                )
         ]
     })
 }
-
 
 export const toSystemSchema = {
     main: Joi.object({
@@ -40,6 +54,7 @@ export const toSystemSchema = {
     }),
     niche: Joi.object({
         ns: Joi.object()
-            .instance(NumberSystem),
+            .instance(NumberSystem)
+            .required(),
     })
 }

@@ -18,10 +18,11 @@ export const constructorSchema = {
                     .min(1)
             )
             .unique()
+            .required()
     })
 }
 
-export const decimalToDigDecimalArraySchema = {
+export const decimalToDecimalDigArrSchema = {
     main: Joi.object({
         decimal: Joi.any(),
         base: Joi.any(),
@@ -29,21 +30,24 @@ export const decimalToDigDecimalArraySchema = {
             .default(false)
     }),
     niche: Joi.object({
-        decimal: [
-            Joi.number()
-                .min(0)
-                .integer()
-                .prefs({ convert: false }),
-            Joi.string()
-                .pattern(/^\d+$/, 'number string')
-        ],
+        decimal: Joi.alternatives()
+            .try(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .prefs({ convert: false }),
+                Joi.string()
+                    .pattern(/^\d+$/, 'number string')
+            )
+            .required(),
         base: Joi.number()
             .min(2)
             .integer()
+            .required(),
     })
 }
 
-export const digDecimalArrayToDecimalSchema = {
+export const decimalDigArrToDecimalSchema = {
     main: Joi.object({
         digArray: Joi.any(),
         base: Joi.any(),
@@ -58,14 +62,16 @@ export const digDecimalArrayToDecimalSchema = {
                     .min(0)
                     .integer()
                     .less(Joi.ref('...base'))
-            ),
+            )
+            .required(),
         base: Joi.number()
             .min(2)
             .integer()
+            .required(),
     })
 }
 
-export const addSchema = {
+export const opSchema = {
     main: Joi.object({
         nsNumber1: Joi.any(),
         nsNumber2: Joi.any(),
@@ -74,53 +80,72 @@ export const addSchema = {
     }),
     niche: Joi.object({
         nsNumber1: Joi.object()
-            .instance(NSNumber),
+            .instance(NSNumber)
+            .required(),
         nsNumber2: Joi.object()
-            .instance(NSNumber),
+            .instance(NSNumber)
+            .required(),
     })
 }
 
-export const subtractSchema = {
+export const toStringSchema = {
     main: Joi.object({
-        nsNumber1: Joi.any(),
-        nsNumber2: Joi.any(),
+        nsNumber: Joi.any(),
         validate: Joi.any()
             .default(false)
     }),
     niche: Joi.object({
-        nsNumber1: Joi.object()
-            .instance(NSNumber),
-        nsNumber2: Joi.object()
-            .instance(NSNumber),
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
     })
 }
 
-export const remainderSchema = {
+export const incrementDecimalDigsArrSchema = {
     main: Joi.object({
-        nsNumber1: Joi.any(),
-        nsNumber2: Joi.any(),
+        decimalDigsArr: Joi.any(),
+        positionFromRight: Joi.any()
+            .default(0),
         validate: Joi.any()
             .default(false)
     }),
     niche: Joi.object({
-        nsNumber1: Joi.object()
-            .instance(NSNumber),
-        nsNumber2: Joi.object()
-            .instance(NSNumber),
+        decimalDigsArr: Joi.array()
+            .min(1)
+            .items(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .less(Joi.ref('$base'))
+            )
+            .required(),
+        positionFromRight: Joi.number()
+            .min(0)
+            .integer()
+            .required(),
     })
 }
 
-export const multiplySchema = {
+export const addToDecimalDigsArrSchema = {
     main: Joi.object({
-        nsNumber1: Joi.any(),
-        nsNumber2: Joi.any(),
+        decimalDigsArr: Joi.any(),
+        number: Joi.any(),
         validate: Joi.any()
             .default(false)
     }),
     niche: Joi.object({
-        nsNumber1: Joi.object()
-            .instance(NSNumber),
-        nsNumber2: Joi.object()
-            .instance(NSNumber),
+        decimalDigsArr: Joi.array()
+            .min(1)
+            .items(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .less(Joi.ref('$base'))
+            )
+            .required(),
+        number: Joi.number()
+            .min(0)
+            .integer()
+            .required(),
     })
 }
