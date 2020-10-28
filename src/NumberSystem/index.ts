@@ -228,7 +228,7 @@ export class NumberSystem {
         )
         decimalDigsArr = validArgs.decimalDigsArr
         number = validArgs.number as number
-        
+
         const base = this.base
 
         const endPortionReversed: number[] = []
@@ -323,9 +323,33 @@ export class NumberSystem {
         return decimalDigsArr
     }
 
+    decimalDigsGenerator(startDecimalDigsArr: number[], optional?: {
+        endDecimalDigsArr?: number[] | null
+        accumulator?: (...args: any[]) => number | number
+        options?: {
+            mode?: DecimalDigsGeneratorMode
+        }
+    }, validate?: boolean) {
+        const validArgs = validateArguments(
+            {
+                startDecimalDigsArr,
+                optional,
+                validate,
+            },
+            decimalDigsGeneratorSchema,
+            { base: this.base }
+        )
+        startDecimalDigsArr = validArgs.startDecimalDigsArr
+        optional = validArgs.optional
+        // if ()
+        return validArgs
+    }
+
     /**
+     * **WARNING: This is Experimental, it needes banchmark test before official support!!!**
+     * 
      * In an immutable way increment digit at given position in provided decimal digits array in current _NumberSystem_
-     * and returns result digits array.
+     * and return result digits array.
      * @param decimalDigsArr - decimal digits array in current _NumberSystem_.
      * @param positionFromRight - Position of digit to increment read from the right.
      * 
@@ -391,6 +415,8 @@ export class NumberSystem {
         return middlePortion
     }
 
+
+
     // decimalDigsGenerator(nsNumber: NSNumber, optional?: {
     //     nsEndNumber?: NSNumber,
     //     addition?: number | string
@@ -422,6 +448,7 @@ export class NumberSystem {
 
 import Joi from "joi"
 import JSBI from "jsbi"
+import { DecimalDigsGeneratorMode } from "../commonTypes"
 import { NSNumber } from "../NSNumber"
 import { validateArguments } from "../utils"
 import {
@@ -432,6 +459,7 @@ import {
     incrementDecimalDigsArrSchema,
     opSchema,
     toStringSchema,
+    decimalDigsGeneratorSchema,
 } from "../validations/NumberSystemValidations"
 
 

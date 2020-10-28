@@ -1,5 +1,5 @@
 import Joi, { options } from "joi"
-
+import dotProp from 'dot-prop'
 
 /**
  * Validates and set defaults for function arguments.
@@ -23,7 +23,6 @@ export function validateArguments(obj: { [key: string]: any }, objSchema: {
     validatedResult = mainSucc
 
     if (mainSucc.validate) {
-        delete mainSucc.validate
         const { error: nicheErr, value: nicheSucc } = objSchema.niche.unknown().validate(validatedResult, {
             errors: { stack: true },
             context
@@ -33,4 +32,35 @@ export function validateArguments(obj: { [key: string]: any }, objSchema: {
     }
 
     return validatedResult
+}
+
+
+interface DefaulsSchema {
+    [key: string]: any | Joi.Schema | DefaulsSchema
+}
+
+export function constructDefaultsSchema(defaultsSchema: DefaulsSchema) {
+    const schema: { [key: string]: Joi.Schema } = {}
+    for (let key in defaultsSchema) {
+        if (Joi.isSchema(defaultsSchema[key])) {
+            schema[key] = defaultsSchema[key]
+        } else if (defaultsSchema[key] !== null
+            && typeof defaultsSchema[key] === 'object'
+            && defaultsSchema[key].__proto__ === Object.prototype) {
+            schema[key] = Joi.alternatives()
+                .conditional(
+                    Joi.object(),
+                    {
+                        then: constructDefaultsSchema(defaultsSchema[key]),
+                        otherwise: Joi.any()
+                    }
+                )
+        } else {
+            schema[key] = Joi.any().default(defaultsSchema[key])
+        }
+    }
+
+    return Joi.object(schema)
+        .unknown()
+        .default()
 }

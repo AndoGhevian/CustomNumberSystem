@@ -1,7 +1,9 @@
 import Joi from "joi";
+import { DecimalDigsGeneratorMode } from "../commonTypes";
 import {
     NSNumber
 } from "../NSNumber";
+import { constructDefaultsSchema } from "../utils";
 
 
 export const constructorSchema = {
@@ -101,6 +103,74 @@ export const toStringSchema = {
     })
 }
 
+export const addToDecimalDigsArrSchema = {
+    main: Joi.object({
+        decimalDigsArr: Joi.any(),
+        number: Joi.any(),
+        validate: Joi.any()
+            .default(false)
+    }),
+    niche: Joi.object({
+        decimalDigsArr: Joi.array()
+            .min(1)
+            .items(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .less(Joi.ref('$base'))
+            )
+            .required(),
+        number: Joi.number()
+            .min(0)
+            .integer()
+            .required(),
+    })
+}
+
+export const decimalDigsGeneratorSchema = {
+    main: constructDefaultsSchema({
+        optional: {
+            endDecimalDigsArr: null,
+            accumulator: 1,
+            options: {
+                mode: 'classic'
+            },
+        },
+        validate: false
+    }),
+    niche: Joi.object({
+        startDecimalDigsArr: Joi.array()
+            .min(1)
+            .items(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .less(Joi.ref('$base'))
+            )
+            .required(),
+        optional: Joi.object({
+            endDecimalDigsArr: Joi.alternatives()
+                .try(
+                    Joi.valid(null),
+                    Joi.array()
+                        .min(1)
+                        .items(
+                            Joi.number()
+                                .min(0)
+                                .integer()
+                                .less(Joi.ref('$base'))
+                        ),
+                ),
+            accumulator: Joi.number()
+                .min(0)
+                .integer(),
+            options: Joi.object({
+                mode: Joi.string().valid(...DecimalDigsGeneratorMode)
+            }),
+        }),
+    }),
+}
+
 export const incrementDecimalDigsArrSchema = {
     main: Joi.object({
         decimalDigsArr: Joi.any(),
@@ -120,30 +190,6 @@ export const incrementDecimalDigsArrSchema = {
             )
             .required(),
         positionFromRight: Joi.number()
-            .min(0)
-            .integer()
-            .required(),
-    })
-}
-
-export const addToDecimalDigsArrSchema = {
-    main: Joi.object({
-        decimalDigsArr: Joi.any(),
-        number: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
-    niche: Joi.object({
-        decimalDigsArr: Joi.array()
-            .min(1)
-            .items(
-                Joi.number()
-                    .min(0)
-                    .integer()
-                    .less(Joi.ref('$base'))
-            )
-            .required(),
-        number: Joi.number()
             .min(0)
             .integer()
             .required(),
