@@ -1,17 +1,17 @@
 import Joi from "joi";
-import { DecimalDigsGeneratorMode } from "../commonTypes";
+
+import * as defaultsSchema from "./defaultsSchema";
+
+import {
+    DecimalDigsGeneratorMode
+} from "../commonTypes";
 import {
     NSNumber
 } from "../NSNumber";
-import { constructDefaultsSchema } from "../utils";
 
 
 export const constructorSchema = {
-    main: Joi.object({
-        digits: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         digits: Joi.array()
             .min(2)
@@ -25,12 +25,7 @@ export const constructorSchema = {
 }
 
 export const decimalToDecimalDigArrSchema = {
-    main: Joi.object({
-        decimal: Joi.any(),
-        base: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         decimal: Joi.alternatives()
             .try(
@@ -50,12 +45,7 @@ export const decimalToDecimalDigArrSchema = {
 }
 
 export const decimalDigArrToDecimalSchema = {
-    main: Joi.object({
-        digArray: Joi.any(),
-        base: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         digArray: Joi.array()
             .min(1)
@@ -74,12 +64,7 @@ export const decimalDigArrToDecimalSchema = {
 }
 
 export const opSchema = {
-    main: Joi.object({
-        nsNumber1: Joi.any(),
-        nsNumber2: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         nsNumber1: Joi.object()
             .instance(NSNumber)
@@ -91,11 +76,7 @@ export const opSchema = {
 }
 
 export const toStringSchema = {
-    main: Joi.object({
-        nsNumber: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         nsNumber: Joi.object()
             .instance(NSNumber)
@@ -104,12 +85,7 @@ export const toStringSchema = {
 }
 
 export const addToDecimalDigsArrSchema = {
-    main: Joi.object({
-        decimalDigsArr: Joi.any(),
-        number: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         decimalDigsArr: Joi.array()
             .min(1)
@@ -128,16 +104,7 @@ export const addToDecimalDigsArrSchema = {
 }
 
 export const decimalDigsGeneratorSchema = {
-    main: constructDefaultsSchema({
-        optional: {
-            endDecimalDigsArr: null,
-            accumulator: 1,
-            options: {
-                mode: 'classic'
-            },
-        },
-        validate: false
-    }),
+    defaultSetter: defaultsSchema.decimalDigsGeneratorDefaults,
     niche: Joi.object({
         startDecimalDigsArr: Joi.array()
             .min(1)
@@ -172,13 +139,7 @@ export const decimalDigsGeneratorSchema = {
 }
 
 export const incrementDecimalDigsArrSchema = {
-    main: Joi.object({
-        decimalDigsArr: Joi.any(),
-        positionFromRight: Joi.any()
-            .default(0),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.incrementDecimalDigsArrDefaults,
     niche: Joi.object({
         decimalDigsArr: Joi.array()
             .min(1)

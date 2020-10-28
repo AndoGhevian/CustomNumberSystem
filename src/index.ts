@@ -58,15 +58,15 @@ const sys1 = new NumberSystem(['a', 'b'])
 //     }
 // })
 
-const res = sys1.decimalDigsGenerator([1, 0], {
-    options: {
-        accumulator: 2,
-        mode: 'a'
-    },
-    b: 'a',
-    accumulator: 2,
-} as any, 0 as any)
-console.log(res)
+// const res = sys1.decimalDigsGenerator([1, 0], {
+//     options: {
+//         accumulator: 2,
+//         mode: 'a'
+//     },
+//     b: 'a',
+//     accumulator: 2,
+// } as any, 0 as any)
+// console.log(res)
 
 // const schema = Joi.object({
 //     optional: Joi.alternatives()

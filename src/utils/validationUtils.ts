@@ -1,28 +1,29 @@
 import Joi, { options } from "joi"
-import dotProp from 'dot-prop'
 
 /**
+ * **NOT SAFE METHOD**
+ * 
  * Validates and set defaults for function arguments.
  * @param obj - object with function arguments to validate.
- * @param objSchema - contains as properties _main_ and _niche_ schemas
+ * @param objSchema - contains as properties _defaultSetter_ and _niche_ schemas
  * to validate arguments with.
- * - main - schema for providing defaults.
+ * - defaultSetter - schema for providing defaults.
  * - niche - schema to validate arguments more strictly if needed.
  * @param context - optional context to pass to validate function. See **_Joi_** context.
  */
 export function validateArguments(obj: { [key: string]: any }, objSchema: {
-    main: Joi.ObjectSchema,
+    defaultSetter: Joi.ObjectSchema,
     niche: Joi.ObjectSchema,
 }, context?: any) {
     let validatedResult: any
-    const { error: mainErr, value: mainSucc } = objSchema.main.validate(obj, {
+    const { error: defaultSetterErr, value: defaultSetterSucc } = objSchema.defaultSetter.validate(obj, {
         errors: { stack: true },
         context
     })
-    if (mainErr) throw mainErr
-    validatedResult = mainSucc
+    if (defaultSetterErr) throw defaultSetterErr
+    validatedResult = defaultSetterSucc
 
-    if (mainSucc.validate) {
+    if (defaultSetterSucc.validate) {
         const { error: nicheErr, value: nicheSucc } = objSchema.niche.unknown().validate(validatedResult, {
             errors: { stack: true },
             context
@@ -39,6 +40,12 @@ interface DefaulsSchema {
     [key: string]: any | Joi.Schema | DefaulsSchema
 }
 
+/**
+ * **NOT SAFE METHOD**
+ * 
+ * Generates Joi object schema to set defaults on appropriate object.
+ * @param defaultsSchema - See DefaultsSchedefaultSetterterface description
+ */
 export function constructDefaultsSchema(defaultsSchema: DefaulsSchema) {
     const schema: { [key: string]: Joi.Schema } = {}
     for (let key in defaultsSchema) {

@@ -5,23 +5,11 @@ import {
 import {
     NumberSystem,
 } from "../NumberSystem"
+import * as defaultsSchema from "./defaultsSchema"
 
 
 export const constructorSchema = {
-    main: Joi.object({
-        ns: Joi.any(),
-        number: [
-            Joi.array()
-                .items(
-                    Joi.any()
-                        .default(0)
-                ),
-            Joi.any()
-                .default(0),
-        ],
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.NSNumberConstructorDefaults,
     niche: Joi.object({
         ns: Joi.object()
             .instance(NumberSystem)
@@ -47,11 +35,7 @@ export const constructorSchema = {
 }
 
 export const toSystemSchema = {
-    main: Joi.object({
-        ns: Joi.any(),
-        validate: Joi.any()
-            .default(false)
-    }),
+    defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         ns: Joi.object()
             .instance(NumberSystem)
