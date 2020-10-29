@@ -1,13 +1,8 @@
 import Joi from "joi";
-
 import * as defaultsSchema from "./defaultsSchema";
+import { DecimalDigsGeneratorMode } from "../commonTypes";
 
-import {
-    DecimalDigsGeneratorMode
-} from "../commonTypes";
-import {
-    NSNumber
-} from "../NSNumber";
+import { NSNumber } from "../NSNumber";
 
 
 export const NumberSystemSchema = {
@@ -103,17 +98,11 @@ export const addToDecimalDigsArrSchema = {
     })
 }
 
-export const decimalDigsManualGeneratorSchema = {
-    defaultSetter: defaultsSchema.decimalDigsManualGeneratorDefaults,
+export const nsNumberManualGeneratorSchema = {
+    defaultSetter: defaultsSchema.nsNumberManualGeneratorDefaults,
     niche: Joi.object({
-        startDecimalDigsArr: Joi.array()
-            .min(1)
-            .items(
-                Joi.number()
-                    .min(0)
-                    .integer()
-                    .less(Joi.ref('$base'))
-            )
+        startNsNumber: Joi.object()
+            .instance(NSNumber)
             .required(),
         accumulator: Joi.function()
             .required(),

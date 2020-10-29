@@ -11,16 +11,19 @@ export * from './NumberSystem'
 
 
 
-const numSys3 = new NumberSystem([
-    'a', 'ac', 'c'
-], true)
+// const numSys3 = new NumberSystem([
+//     'a', 'ac', 'c'
+// ], true)
 
-const numSys10 = new NumberSystem([
-    'a', 'b', 'c', 'd', 'e', 'f', 't', 'y', 'u', 'p'
-], true)
+// const numSys10 = new NumberSystem([
+//     'a', 'b', 'c', 'd', 'e', 'f', 't', 'y', 'u', 'p'
+// ], true)
 
 
-const number = numSys10.Number('1232131', true)
+// const number = numSys10.Number('1232131', true)
+
+
+
 
 // // Testing decimalDigsGenerator.
 // const res = numSys3.decimalDigsGenerator([1, 0], {

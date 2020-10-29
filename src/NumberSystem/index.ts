@@ -1,3 +1,6 @@
+import JSBI from "jsbi"
+
+
 /**
  * Represents new number system, with provided digits.
  */
@@ -217,22 +220,22 @@ export class NumberSystem {
     }
 
     /**
-     * Generates decimal digits arrays based on custom function,
-     * which must return number or string representation of number to add
-     * to last decimal digits array, or null to return from generator(to stop it).
-     * @param startDecimalDigsArr - Decimal digits array in current base.
-     * .i.e Each element in array must be from set of remainders of division on current _base_.
-     * @param accumulator - Function which returnes number or string representation of number
-     * to increment current value whith or null to stop generator.
-     * @param optional - Defines generator behavior. For more details see each option description.
+     * Generates _NSNumbers_  based on custom function,
+     * which must return _NSNumber_ to add
+     * to last _NSNumber_ generated or null, to return from generator(to stop it).
+     * @param startNsNumber - _NSNumber_ to start generating values from.
+     * @param accumulator - Function which returnes _NSNumber_
+     * to increment current value whith or null, to stop generator.
+     * @param optional - Optional arguments.
+     * For more details see each optional argument description.
      * 
      * **Default -  _See each propery default_**
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
      */
-    decimalDigsManualGenerator(
-        startDecimalDigsArr: number[],
+    nsNumberManualGenerator(
+        startNsNumber: NSNumber,
         accumulator: (lastNSNumber?: NSNumber) => NSNumber | null,
         optional?: {
             /**
@@ -247,185 +250,137 @@ export class NumberSystem {
         }, validate?: boolean) {
         const validArgs = validateArguments(
             {
-                startDecimalDigsArr,
+                startNsNumber,
                 accumulator,
                 optional,
                 validate,
             },
-            decimalDigsManualGeneratorSchema,
+            nsNumberManualGeneratorSchema,
             { base: this.base }
         )
-        startDecimalDigsArr = validArgs.startDecimalDigsArr
+        startNsNumber = validArgs.startNsNumber
         accumulator = validArgs.accumulator
         optional = validArgs.optional
 
-        const zeroNsNumber = this.Number(0)
-        const startNsNumber = this.Number(startDecimalDigsArr)
+        const sys = this
+        const zeroNsNumber = sys.Number(0)
 
-        const base = this.base
-
-        let sumBigInt = startNsNumber.bigInt
+        let sumNsNumber = sys.Number(startNsNumber)
         return function* () {
             let accNsNumber = accumulator()
-            if (accumulator.length) {
-                while (true) {
-                    if (accNsNumber === null) return
+            while (true) {
+                if (accNsNumber === null) return
 
-                    let additionBigInt = accNsNumber.bigInt
-                    sumBigInt = JSBI.add(sumBigInt, additionBigInt)
+                sumNsNumber = sys.add(accNsNumber, sumNsNumber)
 
-                    let lastDecimalDigsArr: number[]
-                    if (JSBI.lessThan(sumBigInt, NumberSystem.ZERO_BIG_INT)) {
-                        yield [...zeroNsNumber.digitsDecimalRepresentation]
-
-                        lastDecimalDigsArr = [...zeroNsNumber.digitsDecimalRepresentation]
-                    } else {
-                        const yieldDecDigsArr = NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        yield yieldDecDigsArr
-
-                        lastDecimalDigsArr = [...yieldDecDigsArr]
-                    }
-
-                    accNsNumber = accumulator(lastDecimalDigsArr)
+                let lastNSNumber: NSNumber
+                if (JSBI.lessThan(sumNsNumber.bigInt, NumberSystem.ZERO_BIG_INT)) {
+                    lastNSNumber = zeroNsNumber
+                    sumNsNumber = zeroNsNumber
+                    yield zeroNsNumber
+                } else {
+                    lastNSNumber = sumNsNumber
+                    yield sumNsNumber
                 }
-            } else {
-                while (true) {
-                    if (accNsNumber === null) return
 
-                    let additionBigInt = JSBI.BigInt(accNsNumber)
-                    sumBigInt = JSBI.add(sumBigInt, additionBigInt)
-
-                    if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-                        yield [...zeroNsNumber.digitsDecimalRepresentation]
-                    } else {
-                        const yieldDecDigsArr = NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        yield yieldDecDigsArr
-                    }
-
-                    accNsNumber = accumulator()
-                }
+                accNsNumber = accumulator(lastNSNumber)
             }
         }
     }
 
-    /**
-     * 
-     * @param startDecimalDigsArr - Decimal digits array in current base.
-     * .i.e Each element in array must be from set of remainders of division on current _base_.
-     * @param optional - Defines generator behavior. For more details see each option description.
-     * 
-     * **Default -  _See each propery default_**
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
-    decimalDigsGenerator(startDecimalDigsArr: number[], optional?: {
-        /**
-         * Excluded end number represented in digits array of current base, to pause generator.
-         * 
-         * **NOTE:** For _stop_ or _continue_ after pause you must change _options.stopOnZeroOrEnd_ option.
-         * 
-         * **Default - _null_, i.e. generator will monotonously continue generation of digits arrays,**
-         * **until zero(if its reached) and pause. So if its monotonously inceressing generator**
-         * **or CONSTANT _NOTZERO_ it will not stop.**
-         */
-        endDecimalDigsArr?: number[] | null
-        /**
-         * Accumulator represented in number or string representation of number.
-         */
-        accumulator?: number | string
-        /**
-         * Customize generator behaviour.
-         */
-        options?: {
-            /**
-             * Defines if to return(stop) generator after pause state reached.
-             * 
-             * **Default - _true_**
-             */
-            stopOnZeroOrEnd?: boolean
-            /**
-             * **CURRENTLY NOT SUPPORTED**
-             */
-            mode?: DecimalDigsGeneratorMode
-        }
-    }, validate?: boolean) {
-        const validArgs = validateArguments(
-            {
-                startDecimalDigsArr,
-                optional,
-                validate,
-            },
-            decimalDigsGeneratorSchema,
-            { base: this.base }
-        )
-        startDecimalDigsArr = validArgs.startDecimalDigsArr
-        optional = validArgs.optional
+    // /**
+    //  * 
+    //  * @param startNsNumber - Decimal digits array in current base.
+    //  * .i.e Each element in array must be from set of remainders of division on current _base_.
+    //  * @param optional - Defines generator behavior. For more details see each option description.
+    //  * 
+    //  * **Default -  _See each propery default_**
+    //  * @param validate - Defines if to validate arguments.
+    //  * 
+    //  * **Default - _false_**
+    //  */
+    // nsNumberGenerator(startNsNumber: NSNumber, optional?: {
+    //     /**
+    //      * Excluded end number represented in digits array of current base, to pause generator.
+    //      * 
+    //      * **NOTE:** For _stop_ or _continue_ after pause you must change _options.stopOnZeroOrEnd_ option.
+    //      * 
+    //      * **Default - _null_, i.e. generator will monotonously continue generation of digits arrays,**
+    //      * **until zero(if its reached) and pause. So if its monotonously inceressing generator**
+    //      * **or CONSTANT _NOTZERO_ it will not stop.**
+    //      */
+    //     endNsNumber?: NSNumber | null
+    //     /**
+    //      * Accumulator represented in number or string representation of number.
+    //      */
+    //     accumulator?: number | string | NSNumber
+    //     /**
+    //      * Customize generator behaviour.
+    //      */
+    //     options?: {
+    //         /**
+    //          * Defines if to return(stop) generator after pause state reached.
+    //          * 
+    //          * **Default - _true_**
+    //          */
+    //         stopOnZeroOrEnd?: boolean
+    //         /**
+    //          * **CURRENTLY NOT SUPPORTED**
+    //          */
+    //         mode?: DecimalDigsGeneratorMode
+    //     }
+    // }, validate?: boolean) {
+    //     const validArgs = validateArguments(
+    //         {
+    //             startNsNumber,
+    //             optional,
+    //             validate,
+    //         },
+    //         decimalDigsGeneratorSchema,
+    //         { base: this.base }
+    //     )
+    //     startNsNumber = validArgs.startNsNumber
+    //     optional = validArgs.optional
 
-        const zeroNsNumber = this.Number(0)
-        const startNsNumber = this.Number(startDecimalDigsArr)
+    //     const sys = this
+    //     const zeroNsNumber = sys.Number(0)
+    //     const endNsNumber = optional!.endNsNumber !== null
+    //         ? sys.Number(optional!.endNsNumber!)
+    //         : null
 
-        const base = this.base
-        const zeroBigInt = zeroNsNumber.bigInt
+    //     let sumNsNumber = sys.Number(startNsNumber)
 
-        let sumBigInt = startNsNumber.bigInt
+    //     return function* () {
+    //         const accNsNumber = optional!.accumulator!
+    //         if (!endNsNumber) {
+    //             if(JSBI.lessThan(accNsNumber.bigInt, NumberSystem.ZERO_BIG_INT)) {
+                    
+    //             }
+                
+    //             let lastNsNumber = sumNsNumber
+    //             while (true) {
+    //                 if(JSBI.lessThan(sumNsNumber.bigInt, endNsNumber.))
 
-        const endBigInt = optional!.endDecimalDigsArr
-            ? this.Number(startDecimalDigsArr).bigInt
-            : null
+    //                 if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
+    //                     yield [...zeroNsNumber.digitsDecimalRepresentation]
+    //                 } else {
+    //                     yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
+    //                 }
+    //             }
+    //         } else {
+    //             // while (JSBI.lessThan(sumBigInt, endBigInt)) {
+    //             //     const additionBigInt = JSBI.BigInt(optional!.accumulator!)
+    //             //     sumBigInt = JSBI.add(sumBigInt, additionBigInt)
 
-        return function* () {
-            if (!endBigInt) {
-                if (typeof optional!.accumulator === 'function') {
-                    while (true) {
-                        const additionBigInt = JSBI.BigInt(optional!.accumulator())
-                        sumBigInt = JSBI.add(sumBigInt, additionBigInt)
-
-                        if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-                            yield [...zeroNsNumber.digitsDecimalRepresentation]
-                        } else {
-                            yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        }
-                    }
-                } else {
-                    while (true) {
-                        const additionBigInt = JSBI.BigInt(optional!.accumulator!)
-                        sumBigInt = JSBI.add(sumBigInt, additionBigInt)
-
-                        if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-                            yield [...zeroNsNumber.digitsDecimalRepresentation]
-                        } else {
-                            yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        }
-                    }
-                }
-            } else {
-                if (typeof optional!.accumulator === 'function') {
-                    while (JSBI.lessThan(sumBigInt, endBigInt)) {
-                        const additionBigInt = JSBI.BigInt(optional!.accumulator())
-                        sumBigInt = JSBI.add(sumBigInt, additionBigInt)
-
-                        if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-                            yield [...zeroNsNumber.digitsDecimalRepresentation]
-                        } else {
-                            yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        }
-                    }
-                } else {
-                    while (JSBI.lessThan(sumBigInt, endBigInt)) {
-                        const additionBigInt = JSBI.BigInt(optional!.accumulator!)
-                        sumBigInt = JSBI.add(sumBigInt, additionBigInt)
-
-                        if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-                            yield [...zeroNsNumber.digitsDecimalRepresentation]
-                        } else {
-                            yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-                        }
-                    }
-                }
-            }
-        }
-    }
+    //             //     if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
+    //             //         yield [...zeroNsNumber.digitsDecimalRepresentation]
+    //             //     } else {
+    //             //         yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
+    //             //     }
+    //             // }
+    //         }
+    //     }
+    // }
 
     /**
      * Returns _NSNumber_ object in current _NumberSystem_.
@@ -449,87 +404,16 @@ export class NumberSystem {
 
         return new NSNumber(this, number)
     }
-
-    /**
-     * **WARNING: This is Experimental, but currently it works!!!**
-     * 
-     * Add give number to provided with decimal digits array number in current _NumberSystem_.
-     * @param decimalDigsArr - number given in decimal digits array in current _NumberSystem_.
-     * @param number - addition number. Must be non negative.
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
-    addToDecimalDigsArr(decimalDigsArr: number[], number: number, validate?: boolean) {
-        const validArgs = validateArguments(
-            {
-                decimalDigsArr,
-                number,
-                validate
-            },
-            addToDecimalDigsArrSchema,
-            { base: this.base }
-        )
-        decimalDigsArr = validArgs.decimalDigsArr
-        number = validArgs.number as number
-
-        const base = this.base
-
-        const endPortionReversed: number[] = []
-        let lastSurplus = 0
-        let index = decimalDigsArr.length - 1
-        while (!(lastSurplus === 0 && number === 0)) {
-            const currDig = index >= 0 ? decimalDigsArr[index] : 0
-            const remainder = base - currDig - lastSurplus
-
-            if (remainder === 0) {
-                lastSurplus = 1
-                const rmd = number % base
-                if (index >= 0) {
-                    decimalDigsArr[index] = rmd
-                } else {
-                    endPortionReversed.push(rmd)
-                }
-                number = (number - rmd) / base
-            } else {
-                const sbtr = number - remainder
-                if (sbtr < 0) {
-                    lastSurplus = 0
-                    if (index >= 0) {
-                        decimalDigsArr[index] = base - remainder + number
-                    } else {
-                        endPortionReversed.push(base - remainder + number)
-                    }
-                    number = 0
-                } else {
-                    lastSurplus = 1
-                    const rmd = sbtr % base
-                    if (index >= 0) {
-                        decimalDigsArr[index] = rmd
-                    } else {
-                        endPortionReversed.push(rmd)
-                    }
-                    number = (sbtr - rmd) / base
-                }
-            }
-            index--
-        }
-
-        decimalDigsArr.splice(0, 0, ...endPortionReversed.reverse())
-        return decimalDigsArr
-    }
 }
 
 
-
-import Joi from "joi"
-import JSBI from "jsbi"
 import { DecimalDigsGeneratorMode } from "../commonTypes"
+
 import { NSNumber } from "../NSNumber"
+
+// validation related imports
 import { validateArguments } from "../utils"
-import { NSNumberSchema } from "../validations/NSNumberValidations"
 import {
-    addToDecimalDigsArrSchema,
     NumberSystemSchema,
     decimalToDecimalDigArrSchema,
     decimalDigArrToDecimalSchema,
@@ -537,45 +421,5 @@ import {
     toStringSchema,
     decimalDigsGeneratorSchema,
     NumberSchema,
-    decimalDigsManualGeneratorSchema,
+    nsNumberManualGeneratorSchema,
 } from "../validations/NumberSystemValidations"
-
-
-// // Testing NumberSystem
-// const ns = new NumberSystem(['a',' b', 1] as any)
-// console.log(ns)
-
-// // Testing decimalToDecimalDigArr
-// console.log(
-//     NumberSystem.decimalToDecimalDigArr(
-//         '99999999999999672519999999999999999999999999999999999999999999999999999999999999999999999999999999999'
-//         +
-//         '9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999'
-//         +
-//         '9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999',
-//         Number.MAX_SAFE_INTEGER + 1,
-//         true
-//     )
-// )
-
-// // Testing decimalDigArrToDecimal
-// console.log(
-//     NumberSystem.decimalDigArrToDecimal([
-//         1,0, 1, 1
-//     ], 2, true)
-// )
-
-// Testing add
-// const sys1 = new NumberSystem(['a','b'])
-// const sys2 = new NumberSystem(['h','j', 'k'])
-// const sys3 = new NumberSystem(['r','t', 'y', 'u'])
-// const num1 = new NSNumber(sys1, 10)
-// const num2 = new NSNumber(sys2, '10')
-// console.log(
-//     sys3.add(num1, num2).toSystem(sys1)
-// )
-
-
-// // Testing toString
-// const sys1 = new NumberSystem(['a','b'])
-// sys1.toString(undefined as any, true)

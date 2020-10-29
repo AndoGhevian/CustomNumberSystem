@@ -1,3 +1,6 @@
+import JSBI from "jsbi"
+
+
 /**
  * Represents provided number in given number system.
  */
@@ -52,7 +55,7 @@ export class NSNumber {
                 }
                 if (number instanceof Array) {
                     const numStr = NumberSystem.decimalDigArrToDecimal(number, this.ns.base)
-                    
+
                     this.bigInt = JSBI.BigInt(numStr)
                     this._digitsDecimalRepresentation = [...number]
                     break
@@ -76,11 +79,10 @@ export class NSNumber {
 }
 
 
-import JSBI from "jsbi"
+import { NumberSystem } from "../NumberSystem"
+
+// validation related imports
 import { validateArguments } from "../utils"
-import {
-    NumberSystem,
-} from "../NumberSystem"
 import {
     NSNumberSchema,
     toSystemSchema,

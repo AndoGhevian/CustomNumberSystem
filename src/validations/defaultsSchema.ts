@@ -6,7 +6,7 @@ export const validateDefaults = constructDefaultsSchema({
     validate: false
 })
 
-export const decimalDigsManualGeneratorDefaults = constructDefaultsSchema({
+export const nsNumberManualGeneratorDefaults = constructDefaultsSchema({
     optional: {
         options: {
             mode: 'bigint'
@@ -24,11 +24,6 @@ export const decimalDigsGeneratorDefaults = constructDefaultsSchema({
         },
     },
     validate: false
-})
-
-export const incrementDecimalDigsArrDefaults = constructDefaultsSchema({
-    positionFromRight: 0,
-    validate: false,
 })
 
 export const NSNumberDefaults = constructDefaultsSchema({

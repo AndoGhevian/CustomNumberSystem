@@ -1,11 +1,8 @@
 import Joi from "joi"
-import {
-    NSNumber,
-} from "../NSNumber"
-import {
-    NumberSystem,
-} from "../NumberSystem"
 import * as defaultsSchema from "./defaultsSchema"
+
+import { NSNumber } from "../NSNumber"
+import { NumberSystem } from "../NumberSystem"
 
 
 export const NSNumberSchema = {

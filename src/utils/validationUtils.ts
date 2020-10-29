@@ -1,4 +1,5 @@
-import Joi, { options } from "joi"
+import Joi from "joi"
+
 
 /**
  * **NOT SAFE METHOD**
