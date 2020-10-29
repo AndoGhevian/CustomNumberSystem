@@ -107,10 +107,8 @@ export const nsNumberManualGeneratorSchema = {
         accumulator: Joi.function()
             .required(),
         optional: Joi.object({
-            options: Joi.object({
-                mode: Joi.string()
-                    .valid(...DecimalDigsGeneratorMode)
-            }),
+            excludeStart: Joi.boolean(),
+            onNegativeNull: Joi.boolean(),
         }),
     }),
 }

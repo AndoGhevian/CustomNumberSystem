@@ -16,8 +16,8 @@ export class NumberSystem {
 
     protected readonly baseBigInt: JSBI
 
-    static readonly ZERO_BIG_INT = JSBI.BigInt(0)
-    static readonly ONE_BIG_INT = JSBI.BigInt(1)
+    protected static readonly ZERO_BIG_INT = JSBI.BigInt(0)
+    protected static readonly ONE_BIG_INT = JSBI.BigInt(1)
 
     /**
      * @param digits - Digits of new number system with at least one element.
@@ -224,8 +224,8 @@ export class NumberSystem {
      * which must return _NSNumber_ to add
      * to last _NSNumber_ generated or null, to return from generator(to stop it).
      * @param startNsNumber - _NSNumber_ to start generating values from.
-     * @param accumulator - Function which returnes _NSNumber_
-     * to increment current value whith or null, to stop generator.
+     * @param accumulator - Function which returns number, string representation of number, or _NSNumber_
+     * to increment last value with, or null to stop generator.
      * @param optional - Optional arguments.
      * For more details see each optional argument description.
      * 
@@ -236,17 +236,35 @@ export class NumberSystem {
      */
     nsNumberManualGenerator(
         startNsNumber: NSNumber,
-        accumulator: (lastNSNumber?: NSNumber) => NSNumber | null,
+        accumulator: (
+            /**
+             * This argument will be or _NSNumber_, if after applying accumulator to last number result is positive,
+             * or will be _null_ if its not.
+             */
+            lastNsNumber?: NSNumber | null,
+            /**
+             * String representation of last number after applying to it accumulator
+             * ( negative numbers will also be presented as strings unlike first argument ).
+             */
+            lastNumberStr?: string,
+        ) => number | string | NSNumber | null,
         optional?: {
             /**
-             * Customize generator behaviour.
+             * Defines if to exclude start number when generating numbers.
+             * 
+             * **Default - _false_**
              */
-            options?: {
-                /**
-                 * **CURRENTLY NOT SUPPORTED**
-                 */
-                mode?: DecimalDigsGeneratorMode
-            }
+            excludeStart?: boolean
+            /**
+             * Defines if to return _null_ if result after applying accumulator to last number is negative.
+             * In this case memoized last number will be _NSNumber(0)_ and subsequent generated value will
+             * be calculated against it.
+             * 
+             * If _false_ provided then returned number will be _NSNumber(0)_.
+             * 
+             * **Default - _true_**
+             */
+            onNegativeNull?: boolean
         }, validate?: boolean) {
         const validArgs = validateArguments(
             {
@@ -267,23 +285,41 @@ export class NumberSystem {
 
         let sumNsNumber = sys.Number(startNsNumber)
         return function* () {
-            let accNsNumber = accumulator()
+            if(!optional!.excludeStart) {
+                yield sumNsNumber
+            }
+
+            let acc = accumulator()
             while (true) {
-                if (accNsNumber === null) return
+                if (acc === null) return
 
-                sumNsNumber = sys.add(accNsNumber, sumNsNumber)
+                const accBigInt = acc instanceof NSNumber ? acc.bigInt : JSBI.BigInt(acc)
 
-                let lastNSNumber: NSNumber
-                if (JSBI.lessThan(sumNsNumber.bigInt, NumberSystem.ZERO_BIG_INT)) {
-                    lastNSNumber = zeroNsNumber
+                const sumBigInt = JSBI.add(accBigInt, sumNsNumber.bigInt)
+                const sumIsNegative = JSBI.lessThan(sumBigInt, NumberSystem.ZERO_BIG_INT)
+                if (sumIsNegative) {
                     sumNsNumber = zeroNsNumber
-                    yield zeroNsNumber
+                    if (optional!.onNegativeNull) {
+                        yield null
+                    } else {
+                        yield sumNsNumber
+                    }
                 } else {
-                    lastNSNumber = sumNsNumber
+                    sumNsNumber = sys.Number(sumBigInt.toString())
                     yield sumNsNumber
                 }
 
-                accNsNumber = accumulator(lastNSNumber)
+                switch (accumulator.length) {
+                    case 2:
+                        acc = accumulator(sumIsNegative ? null : sumNsNumber, sumBigInt.toString())
+                        break
+                    case 1:
+                        acc = accumulator(sumIsNegative ? null : sumNsNumber)
+                        break
+                    case 0:
+                    default:
+                        acc = accumulator()
+                }
             }
         }
     }
@@ -354,9 +390,9 @@ export class NumberSystem {
     //         const accNsNumber = optional!.accumulator!
     //         if (!endNsNumber) {
     //             if(JSBI.lessThan(accNsNumber.bigInt, NumberSystem.ZERO_BIG_INT)) {
-                    
+
     //             }
-                
+
     //             let lastNsNumber = sumNsNumber
     //             while (true) {
     //                 if(JSBI.lessThan(sumNsNumber.bigInt, endNsNumber.))

@@ -8,9 +8,8 @@ export const validateDefaults = constructDefaultsSchema({
 
 export const nsNumberManualGeneratorDefaults = constructDefaultsSchema({
     optional: {
-        options: {
-            mode: 'bigint'
-        },
+        excludeStart: false,
+        onNegativeNull: true,
     },
     validate: false
 })

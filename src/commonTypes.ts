@@ -1,3 +1,5 @@
+import { NSNumber } from "."
+
 export const HorizontalDirection: ['left', 'right'] = ['left', 'right']
 export const VarticalDirection: ['up', 'down'] = ['up', 'down']
 export const DecimalDigsGeneratorMode: [/* 'classic', */ 'bigint'] = [/* 'classic', */ 'bigint']
