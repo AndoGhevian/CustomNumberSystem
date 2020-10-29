@@ -248,7 +248,7 @@ export class NumberSystem {
     Number(nsNumber: NSNumber, validate?: boolean): NSNumber
     Number(decimalDigArray?: number[], validate?: boolean): NSNumber
     Number(number?: any, validate?: boolean) {
-        const validArgs = validateArguments({ number, validate }, NSNumberSchema)
+        const validArgs = validateArguments({ number, validate }, NumberSchema)
         number = validArgs.number
 
         return new NSNumber(this, number)
@@ -322,126 +322,6 @@ export class NumberSystem {
         decimalDigsArr.splice(0, 0, ...endPortionReversed.reverse())
         return decimalDigsArr
     }
-
-    /**
-     * **WARNING: This is Experimental, but currently it works!!!**
-     * 
-     * Increment digit at given position in provided decimal Digits array in current _NumberSystem_
-     * and returns result digits array.
-     * @param decimalDigsArr - decimal digits array in current _NumberSystem_.
-     * @param positionFromRight - Position of digit to increment read from the right.
-     * 
-     * **Default _0_**
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default _false_**
-     */
-    incrementDecimalDigsArr(decimalDigsArr: number[], positionFromRight?: number, validate?: boolean) {
-        const validArgs = validateArguments(
-            {
-                decimalDigsArr,
-                positionFromRight,
-                validate
-            },
-            incrementDecimalDigsArrSchema,
-            { base: this.base }
-        )
-        decimalDigsArr = validArgs.decimalDigsArr
-        positionFromRight = validArgs.positionFromRight as number
-
-        const base = this.base
-        if (positionFromRight >= decimalDigsArr.length) {
-            decimalDigsArr.splice(0, 0, 1, ...[...Array(positionFromRight - decimalDigsArr.length)].map(_ => 0))
-            return decimalDigsArr
-        }
-
-        let leftPos = decimalDigsArr.length - 1 - positionFromRight
-        let remainder = base - decimalDigsArr[leftPos]
-        while (positionFromRight < decimalDigsArr.length && remainder === 1) {
-            decimalDigsArr[leftPos] = 0
-            positionFromRight++
-            if (positionFromRight !== decimalDigsArr.length) {
-                leftPos = decimalDigsArr.length - 1 - positionFromRight
-                remainder = base - decimalDigsArr[leftPos]
-            }
-        }
-        if (positionFromRight === decimalDigsArr.length) {
-            decimalDigsArr.splice(0, 0, 1)
-        } else {
-            decimalDigsArr[leftPos]++
-        }
-        return decimalDigsArr
-    }
-
-    /**
-     * **WARNING: This is Experimental, it needes banchmark test before official support!!!**
-     * 
-     * In an immutable way increment digit at given position in provided decimal digits array in current _NumberSystem_
-     * and return result digits array.
-     * @param decimalDigsArr - decimal digits array in current _NumberSystem_.
-     * @param positionFromRight - Position of digit to increment read from the right.
-     * 
-     * **Default _0_**
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default _false_**
-     */
-    incrementDecimalDigsArrImmutable(decimalDigsArr: number[], positionFromRight?: number, validate?: boolean) {
-        const validArgs = validateArguments(
-            {
-                decimalDigsArr,
-                positionFromRight,
-                validate
-            },
-            incrementDecimalDigsArrSchema,
-            { base: this.base }
-        )
-        decimalDigsArr = validArgs.decimalDigsArr
-        positionFromRight = validArgs.positionFromRight as number
-
-        const base = this.base
-        if (positionFromRight >= decimalDigsArr.length) {
-            const endPortion = []
-            for (let i = 0; i < positionFromRight - decimalDigsArr.length; i++) {
-                endPortion.push(0)
-            }
-            endPortion.unshift(1)
-            endPortion.push(...decimalDigsArr)
-            return endPortion
-        }
-
-        let endPortion: number[] = []
-        const startPortion: number[] = positionFromRight === 0
-            ? []
-            : decimalDigsArr.slice(-positionFromRight)
-        const middlePortion = []
-
-        let leftPos = decimalDigsArr.length - 1 - positionFromRight
-        let remainder = base - decimalDigsArr[leftPos]
-        while (positionFromRight < decimalDigsArr.length && remainder === 1) {
-            middlePortion.push(0)
-            positionFromRight++
-            if (positionFromRight !== decimalDigsArr.length) {
-                leftPos = decimalDigsArr.length - 1 - positionFromRight
-                remainder = base - decimalDigsArr[leftPos]
-            }
-        }
-        if (positionFromRight === decimalDigsArr.length) {
-            middlePortion.unshift(1)
-        } else {
-            leftPos = decimalDigsArr.length - 1 - positionFromRight
-            middlePortion.unshift(decimalDigsArr[leftPos] + 1)
-
-            endPortion = decimalDigsArr.slice(0, leftPos)
-        }
-
-        if (endPortion.length) {
-            endPortion.push(...middlePortion, ...startPortion)
-            return endPortion
-        }
-        middlePortion.push(...startPortion)
-        return middlePortion
-    }
 }
 
 
@@ -457,10 +337,10 @@ import {
     NumberSystemSchema,
     decimalToDecimalDigArrSchema,
     decimalDigArrToDecimalSchema,
-    incrementDecimalDigsArrSchema,
     opSchema,
     toStringSchema,
     decimalDigsGeneratorSchema,
+    NumberSchema,
 } from "../validations/NumberSystemValidations"
 
 

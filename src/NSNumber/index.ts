@@ -85,12 +85,3 @@ import {
     NSNumberSchema,
     toSystemSchema,
 } from "../validations/NSNumberValidations"
-
-
-// // Testing NSNumber and NSNumber.toSystem
-// const system = new NumberSystem(['1', '2', '4'], true)
-// const system2 = new NumberSystem(['a', '2', 'cd'], true)
-// const num = new NSNumber(system, [2, 2, 3], true)
-// console.log(
-//     num.toSystem(system2)
-// )

@@ -143,25 +143,6 @@ export const decimalDigsGeneratorSchema = {
     }),
 }
 
-export const incrementDecimalDigsArrSchema = {
-    defaultSetter: defaultsSchema.incrementDecimalDigsArrDefaults,
-    niche: Joi.object({
-        decimalDigsArr: Joi.array()
-            .min(1)
-            .items(
-                Joi.number()
-                    .min(0)
-                    .integer()
-                    .less(Joi.ref('$base'))
-            )
-            .required(),
-        positionFromRight: Joi.number()
-            .min(0)
-            .integer()
-            .required(),
-    })
-}
-
 export const NumberSchema = {
     defaultSetter: defaultsSchema.NSNumberDefaults,
     niche: Joi.object({

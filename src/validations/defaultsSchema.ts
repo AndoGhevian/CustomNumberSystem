@@ -35,6 +35,3 @@ export const NSNumberDefaults = constructDefaultsSchema({
         ),
     validate: false,
 })
-
-// [0]
-// 0
