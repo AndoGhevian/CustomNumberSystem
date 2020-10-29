@@ -8,8 +8,8 @@ import {
 import * as defaultsSchema from "./defaultsSchema"
 
 
-export const constructorSchema = {
-    defaultSetter: defaultsSchema.NSNumberConstructorDefaults,
+export const NSNumberSchema = {
+    defaultSetter: defaultsSchema.NSNumberDefaults,
     niche: Joi.object({
         ns: Joi.object()
             .instance(NumberSystem)

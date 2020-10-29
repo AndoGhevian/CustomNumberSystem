@@ -25,12 +25,12 @@ export class NSNumber {
      * 
      * **Default _false_**
      */
-    constructor(ns: NumberSystem, number: number, validate?: boolean)
-    constructor(ns: NumberSystem, numberStr: string, validate?: boolean)
+    constructor(ns: NumberSystem, number?: number, validate?: boolean)
+    constructor(ns: NumberSystem, numberStr?: string, validate?: boolean)
     constructor(ns: NumberSystem, nsNumber: NSNumber, validate?: boolean)
-    constructor(ns: NumberSystem, decimalDigArray: number[], validate?: boolean)
-    constructor(ns: NumberSystem, number: any, validate?: boolean) {
-        const validArgs = validateArguments({ ns, number, validate }, constructorSchema)
+    constructor(ns: NumberSystem, decimalDigArray?: number[], validate?: boolean)
+    constructor(ns: NumberSystem, number?: any, validate?: boolean) {
+        const validArgs = validateArguments({ ns, number, validate }, NSNumberSchema)
         ns = validArgs.ns
         number = validArgs.number
 
@@ -82,7 +82,7 @@ import {
     NumberSystem,
 } from "../NumberSystem"
 import {
-    constructorSchema,
+    NSNumberSchema,
     toSystemSchema,
 } from "../validations/NSNumberValidations"
 

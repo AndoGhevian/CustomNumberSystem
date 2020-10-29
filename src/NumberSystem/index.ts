@@ -21,7 +21,7 @@ export class NumberSystem {
      * **Default _false_**
      */
     constructor(digits: string[], validate?: boolean) {
-        const validArgs = validateArguments({ digits, validate }, constructorSchema)
+        const validArgs = validateArguments({ digits, validate }, NumberSystemSchema)
         digits = validArgs.digits
 
         this.digits = digits
@@ -208,10 +208,58 @@ export class NumberSystem {
         }, '')
     }
 
+    // decimalDigsGenerator(startDecimalDigsArr: number[], optional?: {
+    //     endDecimalDigsArr?: number[] | null
+    //     accumulator?: (...args: any[]) => number | number
+    //     options?: {
+    //         mode?: DecimalDigsGeneratorMode
+    //     }
+    // }, validate?: boolean) {
+    //     const validArgs = validateArguments(
+    //         {
+    //             startDecimalDigsArr,
+    //             optional,
+    //             validate,
+    //         },
+    //         decimalDigsGeneratorSchema,
+    //         { base: this.base }
+    //     )
+    //     startDecimalDigsArr = validArgs.startDecimalDigsArr
+    //     optional = validArgs.optional
+
+    //     // const startBigInt = JSBI()
+    //     return validArgs
+    // }
+
     /**
+     * Returns _NSNumber_ object in current _NumberSystem_.
+     * @param number - number, string( representation of number ), _NSNumber_ object, **OR**
+     * Array of decimal digits in current _NumberSystem_.
+     * 
+     * **Default -**
+     * - **If empty array provided  - _[0]_**
+     * - **If nothing(_undefined_) -  _0_**
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default _false_**
+     */
+    Number(number?: number, validate?: boolean): NSNumber
+    Number(numberStr?: string, validate?: boolean): NSNumber
+    Number(nsNumber: NSNumber, validate?: boolean): NSNumber
+    Number(decimalDigArray?: number[], validate?: boolean): NSNumber
+    Number(number?: any, validate?: boolean) {
+        const validArgs = validateArguments({ number, validate }, NSNumberSchema)
+        number = validArgs.number
+
+        return new NSNumber(this, number)
+    }
+
+    /**
+     * **WARNING: This is Experimental, but currently it works!!!**
+     * 
      * Add give number to provided with decimal digits array number in current _NumberSystem_.
      * @param decimalDigsArr - number given in decimal digits array in current _NumberSystem_.
-     * @param number - addition number.
+     * @param number - addition number. Must be non negative.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default _false_**
@@ -276,6 +324,8 @@ export class NumberSystem {
     }
 
     /**
+     * **WARNING: This is Experimental, but currently it works!!!**
+     * 
      * Increment digit at given position in provided decimal Digits array in current _NumberSystem_
      * and returns result digits array.
      * @param decimalDigsArr - decimal digits array in current _NumberSystem_.
@@ -321,28 +371,6 @@ export class NumberSystem {
             decimalDigsArr[leftPos]++
         }
         return decimalDigsArr
-    }
-
-    decimalDigsGenerator(startDecimalDigsArr: number[], optional?: {
-        endDecimalDigsArr?: number[] | null
-        accumulator?: (...args: any[]) => number | number
-        options?: {
-            mode?: DecimalDigsGeneratorMode
-        }
-    }, validate?: boolean) {
-        const validArgs = validateArguments(
-            {
-                startDecimalDigsArr,
-                optional,
-                validate,
-            },
-            decimalDigsGeneratorSchema,
-            { base: this.base }
-        )
-        startDecimalDigsArr = validArgs.startDecimalDigsArr
-        optional = validArgs.optional
-        // if ()
-        return validArgs
     }
 
     /**
@@ -414,34 +442,6 @@ export class NumberSystem {
         middlePortion.push(...startPortion)
         return middlePortion
     }
-
-
-
-    // decimalDigsGenerator(nsNumber: NSNumber, optional?: {
-    //     nsEndNumber?: NSNumber,
-    //     addition?: number | string
-    // }) {
-    //     const additionSchema = Joi.alternatives()
-    //         .try(
-    //             Joi.number().max(Number.MAX_SAFE_INTEGER).min(Number.MIN_SAFE_INTEGER),
-    //             Joi.string().pattern(/^(-|\+)?\d+$/, 'pos/neg number string')
-    //         )
-    //         .failover(1)
-    //         .default(1)
-    //     const currNsNumber = nsNumber.ns === this ? nsNumber : nsNumber.toSystem(this)
-
-    //     let currBigInt = currNsNumber.bigInt
-    //     let oneBigInt = JSBI.BigInt(1)
-
-    //     return function* (): Generator<number[], any, number | string> {
-    //         let addition = yield [...currNsNumber.digitsDecimalRepresentation]
-
-    //         while (true) {
-    //             const { value: addValue } = additionSchema.validate(addition)
-    //             addition = addValue
-    //         }
-    //     }
-    // }
 }
 
 
@@ -451,9 +451,10 @@ import JSBI from "jsbi"
 import { DecimalDigsGeneratorMode } from "../commonTypes"
 import { NSNumber } from "../NSNumber"
 import { validateArguments } from "../utils"
+import { NSNumberSchema } from "../validations/NSNumberValidations"
 import {
     addToDecimalDigsArrSchema,
-    constructorSchema,
+    NumberSystemSchema,
     decimalToDecimalDigArrSchema,
     decimalDigArrToDecimalSchema,
     incrementDecimalDigsArrSchema,

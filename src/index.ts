@@ -9,6 +9,38 @@ export * from './commonTypes'
 export * from './NSNumber'
 export * from './NumberSystem'
 
+
+
+const numSys3 = new NumberSystem([
+    'a', 'ac', 'c'
+], true)
+
+const numSys10 = new NumberSystem([
+    'a', 'b', 'c', 'd', 'e', 'f', 't', 'y', 'u', 'p'
+], true)
+
+
+const number = new NSNumber(numSys3, '215836771283', true)
+
+// // const lastD = Date.now()
+// const sum = numSys10.addToDecimalDigsArr([10, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+//     1, 0, 0, 5, 4, 3, 2, 3, 4, 5, 6, 5, 7, 6, 8, 9, 9,
+// ], 9007199254740991, true)
+
+// // console.log(Number.MAX_SAFE_INTEGER)
+// // console.log(`${Date.now() - lastD} milliseconds execution.`)
+// // console.log(`Sum is: ${sum}`)
+
+
 // // Testing add
 // const sys1 = new NumberSystem(['a', 'b'])
 // const sys2 = new NumberSystem(['h', 'j', 'k'])
@@ -58,15 +90,15 @@ const sys1 = new NumberSystem(['a', 'b'])
 //     }
 // })
 
-// const res = sys1.decimalDigsGenerator([1, 0], {
-//     options: {
-//         accumulator: 2,
-//         mode: 'a'
-//     },
-//     b: 'a',
-//     accumulator: 2,
-// } as any, 0 as any)
-// console.log(res)
+const res = sys1.decimalDigsGenerator([1, 0], {
+    options: {
+        accumulator: 2,
+        mode: undefined
+    },
+    b: 'a',
+    accumulator: 2,
+} as any, 0 as any)
+console.log(res)
 
 // const schema = Joi.object({
 //     optional: Joi.alternatives()
@@ -87,3 +119,9 @@ const sys1 = new NumberSystem(['a', 'b'])
 //         optional: null
 //     })
 // )
+
+
+// const defaults = sys1.
+
+
+// console.log(defaults)

@@ -10,7 +10,7 @@ import {
 } from "../NSNumber";
 
 
-export const constructorSchema = {
+export const NumberSystemSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         digits: Joi.array()
@@ -128,11 +128,16 @@ export const decimalDigsGeneratorSchema = {
                                 .less(Joi.ref('$base'))
                         ),
                 ),
-            accumulator: Joi.number()
-                .min(0)
-                .integer(),
+            accumulator: Joi.alternatives()
+                .try(
+                    Joi.number()
+                        .min(0)
+                        .integer(),
+                    Joi.function()
+                ),
             options: Joi.object({
-                mode: Joi.string().valid(...DecimalDigsGeneratorMode)
+                mode: Joi.string()
+                    .valid(...DecimalDigsGeneratorMode)
             }),
         }),
     }),
@@ -154,5 +159,28 @@ export const incrementDecimalDigsArrSchema = {
             .min(0)
             .integer()
             .required(),
+    })
+}
+
+export const NumberSchema = {
+    defaultSetter: defaultsSchema.NSNumberDefaults,
+    niche: Joi.object({
+        number: [
+            Joi.number()
+                .min(0)
+                .integer()
+                .prefs({ convert: false }),
+            Joi.string()
+                .pattern(/^\d+$/, 'number string'),
+            Joi.object()
+                .instance(NSNumber),
+            Joi.array()
+                .items(
+                    Joi.number()
+                        .min(0)
+                        .integer()
+                        .less(Joi.ref('...ns.base'))
+                )
+        ]
     })
 }

@@ -11,7 +11,7 @@ export const decimalDigsGeneratorDefaults = constructDefaultsSchema({
         endDecimalDigsArr: null,
         accumulator: 1,
         options: {
-            mode: 'classic'
+            mode: 'bigint'
         },
     },
     validate: false
@@ -22,7 +22,7 @@ export const incrementDecimalDigsArrDefaults = constructDefaultsSchema({
     validate: false,
 })
 
-export const NSNumberConstructorDefaults = constructDefaultsSchema({
+export const NSNumberDefaults = constructDefaultsSchema({
     number: Joi.alternatives()
         .try(
             Joi.array()
@@ -35,3 +35,6 @@ export const NSNumberConstructorDefaults = constructDefaultsSchema({
         ),
     validate: false,
 })
+
+// [0]
+// 0
