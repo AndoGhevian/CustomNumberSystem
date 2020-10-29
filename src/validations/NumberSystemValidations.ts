@@ -103,6 +103,29 @@ export const addToDecimalDigsArrSchema = {
     })
 }
 
+export const decimalDigsManualGeneratorSchema = {
+    defaultSetter: defaultsSchema.decimalDigsManualGeneratorDefaults,
+    niche: Joi.object({
+        startDecimalDigsArr: Joi.array()
+            .min(1)
+            .items(
+                Joi.number()
+                    .min(0)
+                    .integer()
+                    .less(Joi.ref('$base'))
+            )
+            .required(),
+        accumulator: Joi.function()
+            .required(),
+        optional: Joi.object({
+            options: Joi.object({
+                mode: Joi.string()
+                    .valid(...DecimalDigsGeneratorMode)
+            }),
+        }),
+    }),
+}
+
 export const decimalDigsGeneratorSchema = {
     defaultSetter: defaultsSchema.decimalDigsGeneratorDefaults,
     niche: Joi.object({

@@ -6,6 +6,15 @@ export const validateDefaults = constructDefaultsSchema({
     validate: false
 })
 
+export const decimalDigsManualGeneratorDefaults = constructDefaultsSchema({
+    optional: {
+        options: {
+            mode: 'bigint'
+        },
+    },
+    validate: false
+})
+
 export const decimalDigsGeneratorDefaults = constructDefaultsSchema({
     optional: {
         endDecimalDigsArr: null,
