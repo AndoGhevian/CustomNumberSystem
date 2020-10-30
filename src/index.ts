@@ -11,18 +11,29 @@ export * from './NumberSystem'
 
 
 
-// const numSys3 = new NumberSystem([
-//     'a', 'ac', 'c'
-// ], true)
+const sys3 = new NumberSystem([
+    'a', 'ac', 'c'
+], true)
 
-// const numSys10 = new NumberSystem([
-//     'a', 'b', 'c', 'd', 'e', 'f', 't', 'y', 'u', 'p'
-// ], true)
-
-
-// const number = numSys10.Number('1232131', true)
+const sys10 = new NumberSystem([
+    'a', 'b', 'c', 'd', 'e', 'f', 't', 'y', 'u', 'p'
+], true)
 
 
+const number = sys10.Number('11', true)
+console.log(sys3.toString(number))
+
+
+console.log(
+    JSBI.divide(
+        JSBI.BigInt(11),
+        JSBI.BigInt(12)
+    ).toString()
+)
+console.log(
+    JSBI.exponentiate(JSBI.BigInt(10), JSBI.BigInt(11))
+        .toString()
+)
 
 
 // // Testing decimalDigsGenerator.

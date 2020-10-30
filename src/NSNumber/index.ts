@@ -11,7 +11,11 @@ export class NSNumber {
     private _digitsDecimalRepresentation: number[] = null as any
     get digitsDecimalRepresentation() {
         if (!this._digitsDecimalRepresentation) {
-            this._digitsDecimalRepresentation = NumberSystem.decimalToDecimalDigArr(this.bigInt.toString(), this.ns.base)
+            this._digitsDecimalRepresentation = NumberSystem.decimalToDecimalDigArr(
+                this.bigInt.toString(),
+                this.ns.base,
+                false
+            )
         }
         return this._digitsDecimalRepresentation
     }
@@ -54,7 +58,7 @@ export class NSNumber {
                     break
                 }
                 if (number instanceof Array) {
-                    const numStr = NumberSystem.decimalDigArrToDecimal(number, this.ns.base)
+                    const numStr = NumberSystem.decimalDigArrToDecimal(number, this.ns.base, false)
 
                     this.bigInt = JSBI.BigInt(numStr)
                     this._digitsDecimalRepresentation = [...number]
@@ -74,8 +78,10 @@ export class NSNumber {
         const validArgs = validateArguments({ ns, validate }, toSystemSchema)
         ns = validArgs.ns
 
-        return new NSNumber(ns, this)
+        return ns.Number(this, false)
     }
+
+
 }
 
 

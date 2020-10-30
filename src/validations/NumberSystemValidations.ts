@@ -58,6 +58,18 @@ export const decimalDigArrToDecimalSchema = {
     })
 }
 
+export const countDigitsStaticSchema = {
+    niche: Joi.object({
+        base: Joi.number()
+            .min(2)
+            .integer()
+            .required(),
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
+    })
+}
+
 export const opSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
@@ -113,42 +125,20 @@ export const nsNumberManualGeneratorSchema = {
     }),
 }
 
-export const decimalDigsGeneratorSchema = {
-    defaultSetter: defaultsSchema.decimalDigsGeneratorDefaults,
+export const nsNumberGeneratorSchema = {
+    defaultSetter: defaultsSchema.nsNumberGeneratorDefaults,
     niche: Joi.object({
-        startDecimalDigsArr: Joi.array()
-            .min(1)
-            .items(
-                Joi.number()
-                    .min(0)
-                    .integer()
-                    .less(Joi.ref('$base'))
-            )
+        startNsNumber: Joi.object()
+            .instance(NSNumber)
             .required(),
         optional: Joi.object({
-            endDecimalDigsArr: Joi.alternatives()
-                .try(
-                    Joi.valid(null),
-                    Joi.array()
-                        .min(1)
-                        .items(
-                            Joi.number()
-                                .min(0)
-                                .integer()
-                                .less(Joi.ref('$base'))
-                        ),
-                ),
-            accumulator: Joi.alternatives()
-                .try(
-                    Joi.number()
-                        .min(0)
-                        .integer(),
-                    Joi.function()
-                ),
-            options: Joi.object({
-                mode: Joi.string()
-                    .valid(...DecimalDigsGeneratorMode)
-            }),
+            endNsNumber: Joi.object()
+                .instance(NSNumber),
+            accumulator: Joi.number()
+                .integer()
+                .invalid(0),
+            excludeStart: Joi.boolean(),
+            excludeEnd: Joi.boolean(),
         }),
     }),
 }
@@ -173,5 +163,24 @@ export const NumberSchema = {
                         .less(Joi.ref('...ns.base'))
                 )
         ]
+    })
+}
+
+export const countDigitsSchema = {
+    niche: Joi.object({
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
+    })
+}
+
+export const getDigitSchema = {
+    niche: Joi.object({
+        position: Joi.number()
+            .integer()
+            .required(),
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
     })
 }

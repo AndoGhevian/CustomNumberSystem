@@ -40,7 +40,58 @@ export class NumberSystem {
     }
 
     /**
-     * Returns array of digits in provided _base_ for given integer number.
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ < _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static lessThan(nsNumber1: NSNumber, nsNumber2: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, opSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.lessThan(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
+
+    /**
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ <= _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static lessThanOrEqual(nsNumber1: NSNumber, nsNumber2: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, opSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.lessThanOrEqual(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
+
+    /**
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ == _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static equal(nsNumber1: NSNumber, nsNumber2: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, opSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.equal(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
+
+    /**
+     * Returns array of digits in provided _base_ for given non negative integer number.
      * Digits will be presented as decimals.
      * i.e. given number will be converted to _base_ and resulting digits will be presented in array as decimals.
      * @param decimal - Non negative Integer( decimal ) number represented eather by Allowed Number or String.
@@ -107,6 +158,30 @@ export class NumberSystem {
     }
 
     /**
+     * Calculates digits count for number within system with given _base_.
+     * @param base - Base to calculate digits within. Must be integer greater than _1_.
+     * @param nsNumber - _NSNumber_ in any system.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static countDigits(base: number, nsNumber: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ base, nsNumber, validate }, countDigitsStaticSchema)
+        base = validArgs.base
+        nsNumber = validArgs.nsNumber
+
+        const baseBigInt = JSBI.BigInt(base)
+
+        let dividedBigInt = nsNumber.bigInt
+        let digCount = 0
+        do {
+            digCount++
+            dividedBigInt = JSBI.divide(dividedBigInt, baseBigInt)
+        } while (!JSBI.equal(dividedBigInt, NumberSystem.ZERO_BIG_INT))
+        return digCount
+    }
+
+    /**
      * Adds two _NSNumber_ instances in current _NumberSystem_.
      * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
      * @param nsNumber1 - number to add.
@@ -120,8 +195,10 @@ export class NumberSystem {
         nsNumber1 = validArgs.nsNumber1
         nsNumber2 = validArgs.nsNumber2
 
-        const sumBigInt = JSBI.add(nsNumber1.bigInt, nsNumber2.bigInt)
-        return new NSNumber(this, sumBigInt.toString())
+        const sys = this
+        const sum = JSBI.add(nsNumber1.bigInt, nsNumber2.bigInt)
+        
+        return sys.Number(sum.toString(), false)
     }
 
     /**
@@ -140,11 +217,13 @@ export class NumberSystem {
         nsNumber1 = validArgs.nsNumber1
         nsNumber2 = validArgs.nsNumber2
 
+        const sys = this
+
         const subtraction = JSBI.subtract(nsNumber1.bigInt, nsNumber2.bigInt)
         if (JSBI.lessThan(subtraction, NumberSystem.ZERO_BIG_INT)) {
             return null
         }
-        return new NSNumber(this, subtraction.toString())
+        return sys.Number(subtraction.toString(), false)
     }
 
     /**
@@ -161,8 +240,10 @@ export class NumberSystem {
         nsNumber1 = validArgs.nsNumber1
         nsNumber2 = validArgs.nsNumber2
 
+        const sys = this
         const remainder = JSBI.remainder(nsNumber1.bigInt, nsNumber2.bigInt)
-        return new NSNumber(this, remainder.toString())
+        
+        return sys.Number(remainder.toString(), false)
     }
 
     /**
@@ -179,8 +260,10 @@ export class NumberSystem {
         nsNumber1 = validArgs.nsNumber1
         nsNumber2 = validArgs.nsNumber2
 
+        const sys = this
         const multiply = JSBI.multiply(nsNumber1.bigInt, nsNumber2.bigInt)
-        return new NSNumber(this, multiply.toString())
+        
+        return sys.Number(multiply.toString(), false)
     }
 
     /**
@@ -199,8 +282,10 @@ export class NumberSystem {
         nsNumber1 = validArgs.nsNumber1
         nsNumber2 = validArgs.nsNumber2
 
+        const sys = this
         const division = JSBI.divide(nsNumber1.bigInt, nsNumber2.bigInt)
-        return new NSNumber(this, division.toString())
+
+        return sys.Number(division.toString(), false)
     }
 
     /**
@@ -214,14 +299,16 @@ export class NumberSystem {
         const validArgs = validateArguments({ nsNumber, validate }, toStringSchema)
         nsNumber = validArgs.nsNumber
 
-        return nsNumber.digitsDecimalRepresentation.reduce((acc, cur) => {
-            return acc + this.digits[cur]
+        const sys = this
+
+        return sys.Number(nsNumber, false).digitsDecimalRepresentation.reduce((acc, cur) => {
+            return acc + sys.digits[cur]
         }, '')
     }
 
     /**
      * Generates _NSNumbers_  based on custom function,
-     * which must return _NSNumber_ to add
+     * which must return number, string representation of number, or _NSNumber_ to add
      * to last _NSNumber_ generated or null, to return from generator(to stop it).
      * @param startNsNumber - _NSNumber_ to start generating values from.
      * @param accumulator - Function which returns number, string representation of number, or _NSNumber_
@@ -244,7 +331,7 @@ export class NumberSystem {
             lastNsNumber?: NSNumber | null,
             /**
              * String representation of last number after applying to it accumulator
-             * ( negative numbers will also be presented as strings unlike first argument ).
+             * ( negative numbers will also be presented unlike first argument ).
              */
             lastNumberStr?: string,
         ) => number | string | NSNumber | null,
@@ -281,11 +368,11 @@ export class NumberSystem {
         optional = validArgs.optional
 
         const sys = this
-        const zeroNsNumber = sys.Number(0)
+        const zeroNsNumber = sys.Number(0, false)
 
-        let sumNsNumber = sys.Number(startNsNumber)
+        let sumNsNumber = sys.Number(startNsNumber, false)
         return function* () {
-            if(!optional!.excludeStart) {
+            if (!optional!.excludeStart) {
                 yield sumNsNumber
             }
 
@@ -305,7 +392,7 @@ export class NumberSystem {
                         yield sumNsNumber
                     }
                 } else {
-                    sumNsNumber = sys.Number(sumBigInt.toString())
+                    sumNsNumber = sys.Number(sumBigInt.toString(), false)
                     yield sumNsNumber
                 }
 
@@ -324,99 +411,125 @@ export class NumberSystem {
         }
     }
 
-    // /**
-    //  * 
-    //  * @param startNsNumber - Decimal digits array in current base.
-    //  * .i.e Each element in array must be from set of remainders of division on current _base_.
-    //  * @param optional - Defines generator behavior. For more details see each option description.
-    //  * 
-    //  * **Default -  _See each propery default_**
-    //  * @param validate - Defines if to validate arguments.
-    //  * 
-    //  * **Default - _false_**
-    //  */
-    // nsNumberGenerator(startNsNumber: NSNumber, optional?: {
-    //     /**
-    //      * Excluded end number represented in digits array of current base, to pause generator.
-    //      * 
-    //      * **NOTE:** For _stop_ or _continue_ after pause you must change _options.stopOnZeroOrEnd_ option.
-    //      * 
-    //      * **Default - _null_, i.e. generator will monotonously continue generation of digits arrays,**
-    //      * **until zero(if its reached) and pause. So if its monotonously inceressing generator**
-    //      * **or CONSTANT _NOTZERO_ it will not stop.**
-    //      */
-    //     endNsNumber?: NSNumber | null
-    //     /**
-    //      * Accumulator represented in number or string representation of number.
-    //      */
-    //     accumulator?: number | string | NSNumber
-    //     /**
-    //      * Customize generator behaviour.
-    //      */
-    //     options?: {
-    //         /**
-    //          * Defines if to return(stop) generator after pause state reached.
-    //          * 
-    //          * **Default - _true_**
-    //          */
-    //         stopOnZeroOrEnd?: boolean
-    //         /**
-    //          * **CURRENTLY NOT SUPPORTED**
-    //          */
-    //         mode?: DecimalDigsGeneratorMode
-    //     }
-    // }, validate?: boolean) {
-    //     const validArgs = validateArguments(
-    //         {
-    //             startNsNumber,
-    //             optional,
-    //             validate,
-    //         },
-    //         decimalDigsGeneratorSchema,
-    //         { base: this.base }
-    //     )
-    //     startNsNumber = validArgs.startNsNumber
-    //     optional = validArgs.optional
+    /**
+     * Monotonic _NSNumbers_ sequence generator.
+     * @param startNsNumber - _NSNumber_ to start generating values from.
+     * @param optional - Optional arguments.
+     * For more details see each optional argument description.
+     * 
+     * **Default -  _See each property default_**
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    nsNumberGenerator(startNsNumber: NSNumber, optional?: {
+        /**
+         * End number represented with _NSNumber_.
+         * 
+         * **Default _undefined_ - It Means Generator will continue monotonously
+         * generate _NSNumbers_, and pause only if zero reached.**
+         * 
+         * **So if its monotonously inceressing generator,**
+         * **it will never stop.**
+         */
+        endNsNumber?: NSNumber
+        /**
+         * Accumulator given in number, string representation of number, or _NSNumber_.
+         * 
+         * **Default - _1_**
+         */
+        accumulator?: number | string | NSNumber
+        /**
+             * Defines if to exclude start number when generating numbers.
+             * 
+             * **Default - _false_**
+             */
+        excludeStart?: boolean
+        /**
+         * Defines if to exclude end number when reached generating numbers.
+         * 
+         * **Default - _false_**
+         */
+        excludeEnd?: boolean
+    }, validate?: boolean) {
+        const validArgs = validateArguments(
+            {
+                startNsNumber,
+                optional,
+                validate,
+            },
+            nsNumberGeneratorSchema,
+            { base: this.base }
+        )
+        startNsNumber = validArgs.startNsNumber
+        optional = validArgs.optional
 
-    //     const sys = this
-    //     const zeroNsNumber = sys.Number(0)
-    //     const endNsNumber = optional!.endNsNumber !== null
-    //         ? sys.Number(optional!.endNsNumber!)
-    //         : null
+        const sys = this
+        const zeroNsNumber = sys.Number(0, false)
 
-    //     let sumNsNumber = sys.Number(startNsNumber)
+        startNsNumber = sys.Number(startNsNumber, false)
 
-    //     return function* () {
-    //         const accNsNumber = optional!.accumulator!
-    //         if (!endNsNumber) {
-    //             if(JSBI.lessThan(accNsNumber.bigInt, NumberSystem.ZERO_BIG_INT)) {
+        const accumulator = optional!.accumulator!
+        const accBigInt = accumulator instanceof NSNumber ? accumulator.bigInt : JSBI.BigInt(accumulator)
 
-    //             }
+        if (JSBI.lessThan(accBigInt, NumberSystem.ZERO_BIG_INT)) {
+            const endNsNumber = optional!.endNsNumber
+                ? sys.Number(optional!.endNsNumber!, false)
+                : zeroNsNumber
 
-    //             let lastNsNumber = sumNsNumber
-    //             while (true) {
-    //                 if(JSBI.lessThan(sumNsNumber.bigInt, endNsNumber.))
+            return function* () {
+                if (!optional!.excludeStart) {
+                    yield startNsNumber
+                }
 
-    //                 if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-    //                     yield [...zeroNsNumber.digitsDecimalRepresentation]
-    //                 } else {
-    //                     yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-    //                 }
-    //             }
-    //         } else {
-    //             // while (JSBI.lessThan(sumBigInt, endBigInt)) {
-    //             //     const additionBigInt = JSBI.BigInt(optional!.accumulator!)
-    //             //     sumBigInt = JSBI.add(sumBigInt, additionBigInt)
+                let sumBigInt = JSBI.add(startNsNumber.bigInt, accBigInt)
+                while (JSBI.lessThan(endNsNumber.bigInt, sumBigInt)) {
+                    yield sys.Number(sumBigInt.toString(), false)
 
-    //             //     if (JSBI.lessThan(sumBigInt, zeroBigInt)) {
-    //             //         yield [...zeroNsNumber.digitsDecimalRepresentation]
-    //             //     } else {
-    //             //         yield NumberSystem.decimalToDecimalDigArr(sumBigInt.toString(), base)
-    //             //     }
-    //             // }
-    //         }
-    //     }
-    // }
+                    sumBigInt = JSBI.add(sumBigInt, accBigInt)
+                }
+                if (!optional!.excludeEnd && JSBI.equal(endNsNumber.bigInt, sumBigInt)) {
+                    yield sys.Number(sumBigInt.toString(), false)
+                }
+            }
+        } else {
+            const accNsNumber = sys.Number(accBigInt.toString(), false)
+
+            if (optional!.endNsNumber) {
+                const endNsNumber = sys.Number(optional!.endNsNumber, false)
+
+                return function* () {
+                    if (!optional!.excludeStart) {
+                        yield startNsNumber
+                    }
+
+                    let sumNsNumber = sys.add(startNsNumber, accNsNumber, false)
+
+                    while (JSBI.lessThan(sumNsNumber.bigInt, endNsNumber.bigInt)) {
+                        yield sumNsNumber
+
+                        sumNsNumber = sys.add(sumNsNumber, accNsNumber, false)
+                    }
+
+                    if (!optional!.excludeEnd && JSBI.equal(endNsNumber.bigInt, sumNsNumber.bigInt)) {
+                        yield sumNsNumber
+                    }
+                }
+            }
+
+            return function* () {
+                if (!optional!.excludeStart) {
+                    yield startNsNumber
+                }
+
+                let sumNsNumber = startNsNumber
+                do {
+                    sumNsNumber = sys.add(sumNsNumber, accNsNumber, false)
+                    yield sumNsNumber
+                } while (true);
+            }
+        }
+    }
 
     /**
      * Returns _NSNumber_ object in current _NumberSystem_.
@@ -438,12 +551,92 @@ export class NumberSystem {
         const validArgs = validateArguments({ number, validate }, NumberSchema)
         number = validArgs.number
 
-        return new NSNumber(this, number)
+        const sys = this
+
+        return new NSNumber(sys, number, false)
+    }
+
+    /**
+     * Returns digit at give position of converting to current _NumberSystem_ number.
+     * @param position - index of digit in current _NumberSystem_.
+     * @param nsNumber - _NSNumber_ in any system which will be conveted to current _NumberSystem_
+     * and digit will be returned.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    getDigit(position: number, nsNumber: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ position, nsNumber, validate }, getDigitSchema)
+        position = validArgs.position
+        nsNumber = validArgs.nsNumber
+
+        if (position < 0) {
+            return null
+        }
+
+        const sys = this
+        const baseBigInt = sys.baseBigInt
+
+        const baseExpBigInt = JSBI.exponentiate(baseBigInt, JSBI.BigInt(position))
+        const lastDigitsBigInt = JSBI.divide(nsNumber.bigInt, baseExpBigInt)
+
+        if (JSBI.equal(lastDigitsBigInt, NumberSystem.ZERO_BIG_INT)) {
+            return null
+        }
+
+        return JSBI.toNumber(JSBI.remainder(lastDigitsBigInt, baseBigInt))
+    }
+
+    decDigitsGenerator(nsNumber: NSNumber, optional?: {
+        /**
+         * End digit position to generate.
+         * 
+         * **Default _undefined_ - It Means Generator will continue monotonously
+         * generate _NSNumbers_, and pause only if zero reached.**
+         * 
+         * **So if its monotonously inceressing generator,**
+         * **it will never stop.**
+         */
+        endPosition?: number
+        /**
+         * Accumulator given in number, string representation of number, or _NSNumber_.
+         * 
+         * **Default - _1_**
+         */
+        accumulator?: number | string | NSNumber
+        /**
+             * Defines if to exclude start number when generating numbers.
+             * 
+             * **Default - _false_**
+             */
+        excludeStartPosition?: boolean
+        /**
+         * Defines if to exclude end number when reached generating numbers.
+         * 
+         * **Default - _false_**
+         */
+        excludeEnd?: boolean
+    }, validate?: boolean) {
+
+    }
+
+    /**
+     * Count digits of number in current _NumberSystem_.
+     * @param nsNumber - number to count digits.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    countDigits(nsNumber: NSNumber, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, countDigitsSchema)
+        nsNumber = validArgs.nsNumber
+
+        const base = this.base
+
+        return NumberSystem.countDigits(base, nsNumber, false)
     }
 }
 
-
-import { DecimalDigsGeneratorMode } from "../commonTypes"
 
 import { NSNumber } from "../NSNumber"
 
@@ -455,7 +648,10 @@ import {
     decimalDigArrToDecimalSchema,
     opSchema,
     toStringSchema,
-    decimalDigsGeneratorSchema,
     NumberSchema,
     nsNumberManualGeneratorSchema,
+    nsNumberGeneratorSchema,
+    countDigitsSchema,
+    getDigitSchema,
+    countDigitsStaticSchema,
 } from "../validations/NumberSystemValidations"

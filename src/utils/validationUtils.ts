@@ -13,9 +13,13 @@ import Joi from "joi"
  * @param context - optional context to pass to validate function. See **_Joi_** context.
  */
 export function validateArguments(obj: { [key: string]: any }, objSchema: {
-    defaultSetter: Joi.ObjectSchema,
+    defaultSetter?: Joi.ObjectSchema,
     niche: Joi.ObjectSchema,
 }, context?: any) {
+    if (!objSchema.defaultSetter) {
+        objSchema.defaultSetter = constructDefaultsSchema({})
+    }
+    
     let validatedResult: any
     const { error: defaultSetterErr, value: defaultSetterSucc } = objSchema.defaultSetter.validate(obj, {
         errors: { stack: true },

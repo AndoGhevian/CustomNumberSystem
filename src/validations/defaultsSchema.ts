@@ -14,13 +14,11 @@ export const nsNumberManualGeneratorDefaults = constructDefaultsSchema({
     validate: false
 })
 
-export const decimalDigsGeneratorDefaults = constructDefaultsSchema({
+export const nsNumberGeneratorDefaults = constructDefaultsSchema({
     optional: {
-        endDecimalDigsArr: null,
         accumulator: 1,
-        options: {
-            mode: 'bigint'
-        },
+        excludeStart: false,
+        excludeEnd: false
     },
     validate: false
 })
