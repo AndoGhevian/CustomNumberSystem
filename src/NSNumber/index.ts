@@ -167,7 +167,7 @@ export class NSNumber {
             digitsCount++
             divideNumber = JSBI.divide(divideNumber, base)
         }
-        
+
         this._digitsCount = digitsCount
 
         return digitsCount
@@ -290,6 +290,8 @@ export class NSNumber {
         }
         //1. DigitsArrayExists End______________
 
+        const currNsNumber = this
+
         // 2. DigitsMapExists (If performance optimized and digits map exists)
         //__________________________________________________
         if (this._digitsMap) {
@@ -298,12 +300,12 @@ export class NSNumber {
                 // 2.1 digitsCountCalcualted (If digits count calculated)
                 const digitsMap = this._digitsMap
                 const digitsCount = this._digitsCount
-                const currNsNumber = this
                 // ___________Generator___________
                 return function* () {
                     const monotonouslyIncressing = accumulator > 0 ? true : false
                     if (startPosition >= digitsCount) {
                         // 2.1.1--InGen startPosition >= digitsCount (If start position more or equal than digits count)
+                        // CHECKED____________________________________________CHECKED
                         let startPos: number, endPos: number
 
                         if (!excludeStartPosition) {
@@ -328,16 +330,19 @@ export class NSNumber {
                             nullPos += accumulator
                         }
 
-                        if (endPosition === nullPos) {
-                            if (!excludeEndPosition) {
-                                yield null
+
+                        if (nullPos === nullEndPos) {
+                            if (nullEndPos === endPosition) {
+                                if (!excludeEndPosition) {
+                                    yield null
+                                }
+                                return
                             }
-                            return
+                            yield null
+                            nullPos += accumulator
                         }
 
-                        yield null
-
-                        startPos = nullPos + accumulator
+                        startPos = nullPos
                         endPos = endPosition !== undefined ? endPosition : 0
 
                         if (startPos > endPos || (startPos === endPos && !excludeEndPosition)) {
@@ -354,7 +359,7 @@ export class NSNumber {
                             let decimalDigitResult: number
                             if (pos in digitsMap) {
                                 decimalDigitResult = digitsMap[pos]
-                                exp += accumulator
+                                exp += Math.abs(accumulator)
                             } else {
                                 const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
@@ -368,7 +373,7 @@ export class NSNumber {
                                 decimalDigitResult = digitsMap[pos]
 
                                 lastNum = JSBI.divide(lastNum, baseExp)
-                                exp = 1
+                                exp = Math.abs(accumulator)
                             }
                             pos += accumulator
                             return decimalDigitResult
@@ -377,14 +382,16 @@ export class NSNumber {
                         while (pos > endPos!) {
                             yield decressingAlgorithm()
                         }
-                        if (!excludeEndPosition) {
+                        if (!excludeEndPosition && pos === endPos) {
                             yield decressingAlgorithm()
                         }
+                        // CHECKED____________________________________________CHECKED
                         // 2.1.1--InGen startPosition >= digitsCount End_____________
                     } else {
                         // 2.1.2--InGen startPosition < digitsCount (If start position less than digits count)
                         if (monotonouslyIncressing) {
                             // 2.1.2--InGen Incressing ( startPosition < digitsCount )
+                            // CHECKED____________________________________________CHECKED
                             let notNullEndPos = endPosition
                             if (endPosition === undefined) {
                                 notNullEndPos = digitsCount - 1
@@ -392,40 +399,45 @@ export class NSNumber {
                                 notNullEndPos = digitsCount - 1
                             }
 
+
                             let expReducer = 1
 
                             let lastBaseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(digitsCount - startPosition))
                             let lastNum = numBigInt
 
                             let notNullStartPos = startPosition
-                            if (!excludeStartPosition) {
-                                if (startPosition in digitsMap) {
-                                    yield digitsMap[startPosition]
-                                    expReducer += accumulator
-                                } else {
-                                    lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
+                            let start: number
+                            if (startPosition in digitsMap) {
+                                start = digitsMap[startPosition]
+                                expReducer += Math.abs(accumulator)
+                            } else {
+                                lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
 
-                                    const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
-                                    digitsMap[startPosition] = JSBI.toNumber(digitBigInt)
-                                    if (currNsNumber._digitsMapLength !== null) {
-                                        currNsNumber._digitsMapMax = notNullStartPos
-                                        currNsNumber._digitsMapLength++
-                                        currNsNumber._mapToArr()
-                                    }
-                                    yield digitsMap[startPosition]
-
-                                    lastNum = JSBI.remainder(lastNum, lastBaseExp)
-                                    expReducer = 1
+                                const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
+                                digitsMap[startPosition] = JSBI.toNumber(digitBigInt)
+                                if (currNsNumber._digitsMapLength !== null) {
+                                    currNsNumber._digitsMapMax = notNullStartPos
+                                    currNsNumber._digitsMapLength++
+                                    currNsNumber._mapToArr()
                                 }
+                                start = digitsMap[startPosition]
+
+                                lastNum = JSBI.remainder(lastNum, lastBaseExp)
+                                expReducer = Math.abs(accumulator)
                             }
                             notNullStartPos += accumulator
+
+                            if (!excludeStartPosition) {
+                                yield start
+                            }
+
 
                             let pos = notNullStartPos
                             const incressAlgorithm = () => {
                                 let decimalDigitResult: number
                                 if (pos in digitsMap) {
                                     decimalDigitResult = digitsMap[pos]
-                                    expReducer += accumulator
+                                    expReducer += Math.abs(accumulator)
                                 } else {
                                     lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
 
@@ -439,74 +451,86 @@ export class NSNumber {
                                     decimalDigitResult = digitsMap[pos]
 
                                     lastNum = JSBI.remainder(lastNum, lastBaseExp)
-                                    expReducer = 1
+                                    expReducer = Math.abs(accumulator)
                                 }
                                 pos += accumulator
                                 return decimalDigitResult
                             }
-                            console.log(pos)
-                            console.log('notNullStartPos')
-                            console.log(notNullStartPos)
-                            console.log('notNullEndPos')
-                            console.log(notNullEndPos)
+
                             while (pos < notNullEndPos!) {
                                 yield incressAlgorithm()
                             }
-                            
-                            if (endPosition === undefined || endPosition === notNullEndPos) {
-                                if (!excludeEndPosition) {
-                                    yield incressAlgorithm()
-                                }
-                                return
-                            }
 
-                            while (pos < endPosition) {
-                                yield null
+
+                            if (pos === notNullEndPos) {
+                                if (endPosition === undefined || notNullEndPos === endPosition) {
+                                    if (!excludeEndPosition) {
+                                        yield incressAlgorithm()
+                                    }
+                                    return
+                                }
+                                yield incressAlgorithm()
                                 pos += accumulator
                             }
-                            return
+
+
+                            if (endPosition !== undefined) {
+                                while (pos < endPosition) {
+                                    yield null
+                                    pos += accumulator
+                                }
+
+                                if (pos === endPosition && !excludeEndPosition) {
+                                    yield null
+                                }
+                            }
+                            // CHECKED____________________________________________CHECKED
                             // 2.1.2--InGen Incressing END_____________
                         } else {
                             // 2.1.2--InGen Decressing ( startPosition < digitsCount )
+                            // CHECKED____________________________________________CHECKED
                             let endPos = endPosition
                             if (endPosition === undefined) {
                                 endPos = 0
                             }
 
-
                             let exp = digitsCount - startPosition
                             let lastNum = numBigInt
 
                             let startPos = startPosition
-                            if (!excludeStartPosition) {
-                                if (startPosition in digitsMap) {
-                                    yield digitsMap[startPosition]
-                                    exp += accumulator
-                                } else {
-                                    const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
-                                    const numberRight = JSBI.remainder(lastNum, baseExp)
-                                    const digitBigInt = JSBI.divide(numberRight, JSBI.divide(baseExp, baseBigInt))
-                                    digitsMap[startPosition] = JSBI.toNumber(digitBigInt)
-                                    if (currNsNumber._digitsMapLength !== null) {
-                                        currNsNumber._digitsMapMax = currNsNumber._digitsMapMax! > startPos ? currNsNumber._digitsMapMax : startPos
-                                        currNsNumber._digitsMapLength++
-                                        currNsNumber._mapToArr()
-                                    }
-                                    yield digitsMap[startPosition]
+                            let start: number
+                            if (startPosition in digitsMap) {
+                                start = digitsMap[startPosition]
+                                exp += Math.abs(accumulator)
+                            } else {
+                                const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
-                                    lastNum = JSBI.divide(lastNum, baseExp)
-                                    exp = 1
+                                const numberRight = JSBI.remainder(lastNum, baseExp)
+                                const digitBigInt = JSBI.divide(numberRight, JSBI.divide(baseExp, baseBigInt))
+                                digitsMap[startPosition] = JSBI.toNumber(digitBigInt)
+                                if (currNsNumber._digitsMapLength !== null) {
+                                    currNsNumber._digitsMapMax = currNsNumber._digitsMapMax! > startPos ? currNsNumber._digitsMapMax : startPos
+                                    currNsNumber._digitsMapLength++
+                                    currNsNumber._mapToArr()
                                 }
+                                start = digitsMap[startPosition]
+
+                                lastNum = JSBI.divide(lastNum, baseExp)
+                                exp = Math.abs(accumulator)
                             }
                             startPos += accumulator
+
+                            if (!excludeStartPosition) {
+                                yield start
+                            }
 
                             let pos = startPos
                             const decressingAlgorithm = () => {
                                 let decimalDigitResult: number
                                 if (pos in digitsMap) {
                                     decimalDigitResult = digitsMap[pos]
-                                    exp += accumulator
+                                    exp += Math.abs(accumulator)
                                 } else {
                                     const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
@@ -521,7 +545,7 @@ export class NSNumber {
                                     }
 
                                     lastNum = JSBI.divide(lastNum, baseExp)
-                                    exp = 1
+                                    exp = Math.abs(accumulator)
                                 }
                                 pos += accumulator
                                 return decimalDigitResult
@@ -530,12 +554,12 @@ export class NSNumber {
                             while (pos > endPos!) {
                                 yield decressingAlgorithm()
                             }
-                            if (endPosition === undefined || endPosition === endPos) {
-                                if (!excludeEndPosition) {
-                                    yield decressingAlgorithm()
-                                }
+
+                            if (!excludeEndPosition && pos === endPos) {
+                                yield decressingAlgorithm()
                             }
                             return
+                            // CHECKED____________________________________________CHECKED
                             // 2.1.2--InGen Decressing END_____________
                         }
                         // 2.1.2--InGen startPosition >= digitsCount END_____________
@@ -587,16 +611,19 @@ export class NSNumber {
                     nullPos += accumulator
                 }
 
-                if (endPosition === nullPos) {
-                    if (!excludeEndPosition) {
-                        yield null
+
+                if (nullPos === nullEndPos) {
+                    if (nullEndPos === endPosition) {
+                        if (!excludeEndPosition) {
+                            yield null
+                        }
+                        return
                     }
-                    return
+                    yield null
+                    nullPos += accumulator
                 }
 
-                yield null
-
-                startPos = nullPos + accumulator
+                startPos = nullPos
                 endPos = endPosition !== undefined ? endPosition : 0
 
                 let exp = digitsCount - startPos
@@ -613,7 +640,7 @@ export class NSNumber {
                     decimalDigitResult = JSBI.toNumber(digitBigInt)
 
                     lastNum = JSBI.divide(lastNum, baseExp)
-                    exp = 1
+                    exp = Math.abs(accumulator)
                     pos += accumulator
                     return decimalDigitResult
                 }
@@ -621,7 +648,7 @@ export class NSNumber {
                 while (pos > endPos!) {
                     yield decressingAlgorithm()
                 }
-                if (!excludeEndPosition) {
+                if (!excludeEndPosition && pos === endPos) {
                     yield decressingAlgorithm()
                 }
                 // 3.1.1--InGen startPosition >= digitsCount End_____________
@@ -635,6 +662,15 @@ export class NSNumber {
                     } else if (endPosition >= digitsCount) {
                         notNullEndPos = digitsCount - 1
                     }
+
+                    if (notNullEndPos === startPosition) {
+                        if (!excludeStartPosition)
+                            yield currNsNumber.getDigit(startPosition)
+                        if (!excludeEndPosition)
+                            yield currNsNumber.getDigit(startPosition)
+                        return
+                    }
+
 
                     let expReducer = 1
 
@@ -690,6 +726,14 @@ export class NSNumber {
                         endPos = 0
                     }
 
+                    // if (endPos === startPosition) {
+                    //     if (!excludeStartPosition)
+                    //         yield currNsNumber.getDigit(startPosition)
+                    //     if (!excludeEndPosition)
+                    //         yield currNsNumber.getDigit(startPosition)
+                    //     return
+                    // }
+
 
                     let exp = digitsCount - startPosition
                     let lastNum = numBigInt
@@ -703,7 +747,7 @@ export class NSNumber {
                         yield JSBI.toNumber(digitBigInt)
 
                         lastNum = JSBI.divide(lastNum, baseExp)
-                        exp = 1
+                        exp = Math.abs(accumulator)
                     }
                     startPos += accumulator
 
@@ -717,7 +761,7 @@ export class NSNumber {
                         decimalDigitResult = JSBI.toNumber(digitBigInt)
 
                         lastNum = JSBI.divide(lastNum, baseExp)
-                        exp = 1
+                        exp = Math.abs(accumulator)
                         pos += accumulator
                         return decimalDigitResult
                     }
@@ -725,10 +769,8 @@ export class NSNumber {
                     while (pos > endPos!) {
                         yield decressingAlgorithm()
                     }
-                    if (endPosition === undefined || endPosition === endPos) {
-                        if (!excludeEndPosition) {
-                            yield decressingAlgorithm()
-                        }
+                    if (!excludeEndPosition && pos === endPos) {
+                        yield decressingAlgorithm()
                     }
                     return
                     // 3.1.2--InGen Decressing END_____________
@@ -747,6 +789,7 @@ export class NSNumber {
         let iterable: Generator<number | null> | string
         if (this.ns.base === 10) {
             iterable = this.bigInt.toString()
+            this._digitsCount = iterable.length
         } else {
             iterable = this.decDigitsGenerator()()
         }
