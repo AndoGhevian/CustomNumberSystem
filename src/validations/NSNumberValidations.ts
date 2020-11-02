@@ -39,3 +39,30 @@ export const toSystemSchema = {
             .required(),
     })
 }
+
+export const getDigitSchema = {
+    niche: Joi.object({
+        position: Joi.number()
+            .integer()
+            .required(),
+    })
+}
+
+export const decDigitsGeneratorSchema = {
+    defaultSetter: defaultsSchema.decDigitsGeneratorDefaults,
+    niche: Joi.object({
+        optional: Joi.object({
+            startPosition: Joi.number()
+                .min(0)
+                .integer(),
+            endPosition: Joi.number()
+                .min(0)
+                .integer(),
+            accumulator: Joi.number()
+                .integer()
+                .invalid(0),
+            excludeStartPosition: Joi.boolean(),
+            excludeEndPosition: Joi.boolean(),
+        }),
+    }),
+}

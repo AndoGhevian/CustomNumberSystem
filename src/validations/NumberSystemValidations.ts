@@ -1,12 +1,12 @@
 import Joi from "joi";
 import * as defaultsSchema from "./defaultsSchema";
-import { DecimalDigsGeneratorMode } from "../commonTypes";
+import { OptimizaionMode } from "../commonTypes";
 
 import { NSNumber } from "../NSNumber";
 
 
 export const NumberSystemSchema = {
-    defaultSetter: defaultsSchema.validateDefaults,
+    defaultSetter: defaultsSchema.NumberSystemDefaults,
     niche: Joi.object({
         digits: Joi.array()
             .min(2)
@@ -15,11 +15,13 @@ export const NumberSystemSchema = {
                     .min(1)
             )
             .unique()
-            .required()
+            .required(),
+        optimization: Joi.string()
+                .valid(...OptimizaionMode)
     })
 }
 
-export const decimalToDecimalDigArrSchema = {
+export const decimalToDecDigitsArrSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         decimal: Joi.alternatives()
@@ -39,7 +41,7 @@ export const decimalToDecimalDigArrSchema = {
     })
 }
 
-export const decimalDigArrToDecimalSchema = {
+export const decDigitsArrToDecimalSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
         digArray: Joi.array()
@@ -183,4 +185,26 @@ export const getDigitSchema = {
             .instance(NSNumber)
             .required(),
     })
+}
+
+export const decDigitsGeneratorSchema = {
+    defaultSetter: defaultsSchema.decDigitsGeneratorDefaults,
+    niche: Joi.object({
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
+        optional: Joi.object({
+            startPosition: Joi.number()
+                .min(0)
+                .integer(),
+            endPosition: Joi.number()
+                .min(0)
+                .integer(),
+            accumulator: Joi.number()
+                .integer()
+                .invalid(0),
+            excludeStartPosition: Joi.boolean(),
+            excludeEndPosition: Joi.boolean(),
+        }),
+    }),
 }

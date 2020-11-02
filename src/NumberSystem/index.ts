@@ -1,4 +1,6 @@
+import { options } from "joi"
 import JSBI from "jsbi"
+import { OptimizaionMode } from ".."
 
 
 /**
@@ -13,6 +15,7 @@ export class NumberSystem {
      * Base of Number System.
      */
     readonly base: number
+    readonly optimizationMode: OptimizaionMode
 
     protected readonly baseBigInt: JSBI
 
@@ -28,14 +31,17 @@ export class NumberSystem {
      * 
      * **Default - _false_**
      */
-    constructor(digits: string[], validate?: boolean) {
-        const validArgs = validateArguments({ digits, validate }, NumberSystemSchema)
+    constructor(digits: string[], options?: {
+        optimization?: 'memoiryOptimized' | 'performanceOptimized'
+    }, validate?: boolean) {
+        const validArgs = validateArguments({ digits, options, validate }, NumberSystemSchema)
         digits = validArgs.digits
+        options = validArgs.options
+
+        this.optimizationMode = options!.optimization!
 
         this.digits = digits
-
         this.base = this.digits.length
-
         this.baseBigInt = JSBI.BigInt(this.base)
     }
 
@@ -106,10 +112,10 @@ export class NumberSystem {
      * 
      * **Default - _false_**
      */
-    static decimalToDecimalDigArr(decimal: string, base: number, validate?: boolean): number[]
-    static decimalToDecimalDigArr(decimal: number, base: number, validate?: boolean): number[]
-    static decimalToDecimalDigArr(decimal: any, base: number, validate?: boolean) {
-        const validArgs = validateArguments({ decimal, base, validate }, decimalToDecimalDigArrSchema)
+    static decimalToDecDigitsArr(decimal: string, base: number, validate?: boolean): number[]
+    static decimalToDecDigitsArr(decimal: number, base: number, validate?: boolean): number[]
+    static decimalToDecDigitsArr(decimal: any, base: number, validate?: boolean) {
+        const validArgs = validateArguments({ decimal, base, validate }, decimalToDecDigitsArrSchema)
         decimal = validArgs.decimal
         base = validArgs.base
 
@@ -143,13 +149,13 @@ export class NumberSystem {
      * 
      * **Default - _false_**
      */
-    static decimalDigArrToDecimal(digArray: number[], base: number, validate?: boolean) {
-        const validArgs = validateArguments({ digArray, base, validate }, decimalDigArrToDecimalSchema)
+    static decDigitsArrToDecimal(digArray: number[], base: number, validate?: boolean) {
+        const validArgs = validateArguments({ digArray, base, validate }, decDigitsArrToDecimalSchema)
         digArray = validArgs.digArray
         base = validArgs.base
 
-        let sumBigInt: JSBI = NumberSystem.ZERO_BIG_INT
         const baseBigInt = JSBI.BigInt(base)
+        let sumBigInt = NumberSystem.ZERO_BIG_INT
         for (const dig of digArray) {
             const digBigInt = JSBI.BigInt(dig)
             sumBigInt = JSBI.add(JSBI.multiply(sumBigInt, baseBigInt), digBigInt)
@@ -170,15 +176,21 @@ export class NumberSystem {
         base = validArgs.base
         nsNumber = validArgs.nsNumber
 
+        const sameBase = base === nsNumber.ns.base
+        if (sameBase) {
+            return nsNumber.countDigits()
+        }
+
         const baseBigInt = JSBI.BigInt(base)
 
         let dividedBigInt = nsNumber.bigInt
-        let digCount = 0
+        let digitsCount = 0
         do {
-            digCount++
+            digitsCount++
             dividedBigInt = JSBI.divide(dividedBigInt, baseBigInt)
         } while (!JSBI.equal(dividedBigInt, NumberSystem.ZERO_BIG_INT))
-        return digCount
+
+        return digitsCount
     }
 
     /**
@@ -197,7 +209,7 @@ export class NumberSystem {
 
         const sys = this
         const sum = JSBI.add(nsNumber1.bigInt, nsNumber2.bigInt)
-        
+
         return sys.Number(sum.toString(), false)
     }
 
@@ -242,7 +254,7 @@ export class NumberSystem {
 
         const sys = this
         const remainder = JSBI.remainder(nsNumber1.bigInt, nsNumber2.bigInt)
-        
+
         return sys.Number(remainder.toString(), false)
     }
 
@@ -262,7 +274,7 @@ export class NumberSystem {
 
         const sys = this
         const multiply = JSBI.multiply(nsNumber1.bigInt, nsNumber2.bigInt)
-        
+
         return sys.Number(multiply.toString(), false)
     }
 
@@ -286,24 +298,6 @@ export class NumberSystem {
         const division = JSBI.divide(nsNumber1.bigInt, nsNumber2.bigInt)
 
         return sys.Number(division.toString(), false)
-    }
-
-    /**
-     * Returns string representation of provided number in current _NumberSystem_.
-     * @param nsNumber - number to present in digits of current system.
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
-    toString(nsNumber: NSNumber, validate?: boolean) {
-        const validArgs = validateArguments({ nsNumber, validate }, toStringSchema)
-        nsNumber = validArgs.nsNumber
-
-        const sys = this
-
-        return sys.Number(nsNumber, false).digitsDecimalRepresentation.reduce((acc, cur) => {
-            return acc + sys.digits[cur]
-        }, '')
     }
 
     /**
@@ -341,7 +335,7 @@ export class NumberSystem {
              * 
              * **Default - _false_**
              */
-            excludeStart?: boolean
+            excludeStart?: boolean,
             /**
              * Defines if to return _null_ if result after applying accumulator to last number is negative.
              * In this case memoized last number will be _NSNumber(0)_ and subsequent generated value will
@@ -351,7 +345,7 @@ export class NumberSystem {
              * 
              * **Default - _true_**
              */
-            onNegativeNull?: boolean
+            onNegativeNull?: boolean,
         }, validate?: boolean) {
         const validArgs = validateArguments(
             {
@@ -432,25 +426,26 @@ export class NumberSystem {
          * **So if its monotonously inceressing generator,**
          * **it will never stop.**
          */
-        endNsNumber?: NSNumber
+        endNsNumber?: NSNumber,
         /**
          * Accumulator given in number, string representation of number, or _NSNumber_.
+         * Must be nonzero integer or its representation.
          * 
          * **Default - _1_**
          */
-        accumulator?: number | string | NSNumber
+        accumulator?: number | string | NSNumber,
         /**
              * Defines if to exclude start number when generating numbers.
              * 
              * **Default - _false_**
              */
-        excludeStart?: boolean
+        excludeStart?: boolean,
         /**
          * Defines if to exclude end number when reached generating numbers.
          * 
          * **Default - _false_**
          */
-        excludeEnd?: boolean
+        excludeEnd?: boolean,
     }, validate?: boolean) {
         const validArgs = validateArguments(
             {
@@ -552,88 +547,7 @@ export class NumberSystem {
         number = validArgs.number
 
         const sys = this
-
         return new NSNumber(sys, number, false)
-    }
-
-    /**
-     * Returns digit at give position of converting to current _NumberSystem_ number.
-     * @param position - index of digit in current _NumberSystem_.
-     * @param nsNumber - _NSNumber_ in any system which will be conveted to current _NumberSystem_
-     * and digit will be returned.
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
-    getDigit(position: number, nsNumber: NSNumber, validate?: boolean) {
-        const validArgs = validateArguments({ position, nsNumber, validate }, getDigitSchema)
-        position = validArgs.position
-        nsNumber = validArgs.nsNumber
-
-        if (position < 0) {
-            return null
-        }
-
-        const sys = this
-        const baseBigInt = sys.baseBigInt
-
-        const baseExpBigInt = JSBI.exponentiate(baseBigInt, JSBI.BigInt(position))
-        const lastDigitsBigInt = JSBI.divide(nsNumber.bigInt, baseExpBigInt)
-
-        if (JSBI.equal(lastDigitsBigInt, NumberSystem.ZERO_BIG_INT)) {
-            return null
-        }
-
-        return JSBI.toNumber(JSBI.remainder(lastDigitsBigInt, baseBigInt))
-    }
-
-    decDigitsGenerator(nsNumber: NSNumber, optional?: {
-        /**
-         * End digit position to generate.
-         * 
-         * **Default _undefined_ - It Means Generator will continue monotonously
-         * generate _NSNumbers_, and pause only if zero reached.**
-         * 
-         * **So if its monotonously inceressing generator,**
-         * **it will never stop.**
-         */
-        endPosition?: number
-        /**
-         * Accumulator given in number, string representation of number, or _NSNumber_.
-         * 
-         * **Default - _1_**
-         */
-        accumulator?: number | string | NSNumber
-        /**
-             * Defines if to exclude start number when generating numbers.
-             * 
-             * **Default - _false_**
-             */
-        excludeStartPosition?: boolean
-        /**
-         * Defines if to exclude end number when reached generating numbers.
-         * 
-         * **Default - _false_**
-         */
-        excludeEnd?: boolean
-    }, validate?: boolean) {
-
-    }
-
-    /**
-     * Count digits of number in current _NumberSystem_.
-     * @param nsNumber - number to count digits.
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
-    countDigits(nsNumber: NSNumber, validate?: boolean) {
-        const validArgs = validateArguments({ nsNumber, validate }, countDigitsSchema)
-        nsNumber = validArgs.nsNumber
-
-        const base = this.base
-
-        return NumberSystem.countDigits(base, nsNumber, false)
     }
 }
 
@@ -644,8 +558,8 @@ import { NSNumber } from "../NSNumber"
 import { validateArguments } from "../utils"
 import {
     NumberSystemSchema,
-    decimalToDecimalDigArrSchema,
-    decimalDigArrToDecimalSchema,
+    decimalToDecDigitsArrSchema,
+    decDigitsArrToDecimalSchema,
     opSchema,
     toStringSchema,
     NumberSchema,
@@ -654,4 +568,5 @@ import {
     countDigitsSchema,
     getDigitSchema,
     countDigitsStaticSchema,
+    decDigitsGeneratorSchema,
 } from "../validations/NumberSystemValidations"

@@ -6,6 +6,12 @@ export const validateDefaults = constructDefaultsSchema({
     validate: false
 })
 
+export const NumberSystemDefaults = constructDefaultsSchema({
+    options: {
+        optimization: 'performanceOptimized'
+    }
+})
+
 export const nsNumberManualGeneratorDefaults = constructDefaultsSchema({
     optional: {
         excludeStart: false,
@@ -35,4 +41,14 @@ export const NSNumberDefaults = constructDefaultsSchema({
                 .default(0),
         ),
     validate: false,
+})
+
+export const decDigitsGeneratorDefaults = constructDefaultsSchema({
+    optional: {
+        startPosition: 0,
+        accumulator: 1,
+        excludeStartPosition: false,
+        excludeEndPosition: false
+    },
+    validate: false
 })
