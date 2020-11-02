@@ -179,6 +179,9 @@ export class NSNumber {
     }
 
 
+    /**
+     * decDigitsGenerator Helper function.
+     */
     private _mapToArr() {
         if (this._digitsMapLength === this._digitsCount) {
             this._digitsArr = []
@@ -246,7 +249,6 @@ export class NSNumber {
         } = optional as RequireExceptFields<typeof optional, 'endPosition'>
 
         const baseBigInt = this.ns['baseBigInt']
-        const isPerformanceOptimized = this.ns.optimizationMode === 'performanceOptimized'
 
         // 1. DigitsArrayExists (If performance optimized and digits array exists)
         //__________________________________________________
@@ -663,14 +665,6 @@ export class NSNumber {
                         notNullEndPos = digitsCount - 1
                     }
 
-                    if (notNullEndPos === startPosition) {
-                        if (!excludeStartPosition)
-                            yield currNsNumber.getDigit(startPosition)
-                        if (!excludeEndPosition)
-                            yield currNsNumber.getDigit(startPosition)
-                        return
-                    }
-
 
                     let expReducer = 1
 
@@ -678,16 +672,20 @@ export class NSNumber {
                     let lastNum = numBigInt
 
                     let notNullStartPos = startPosition
-                    if (!excludeStartPosition) {
-                        lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
+                    let start: number
+                    lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
 
-                        const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
-                        yield JSBI.toNumber(digitBigInt)
+                    const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
+                    start = JSBI.toNumber(digitBigInt)
 
-                        lastNum = JSBI.remainder(lastNum, lastBaseExp)
-                        expReducer = 1
-                    }
+                    lastNum = JSBI.remainder(lastNum, lastBaseExp)
+                    expReducer = Math.abs(accumulator)
                     notNullStartPos += accumulator
+
+                    if (!excludeStartPosition) {
+                        yield start
+                    }
+
 
                     let pos = notNullStartPos
                     const incressAlgorithm = () => {
@@ -698,7 +696,7 @@ export class NSNumber {
                         decimalDigitResult = JSBI.toNumber(digitBigInt)
 
                         lastNum = JSBI.remainder(lastNum, lastBaseExp)
-                        expReducer = 1
+                        expReducer = Math.abs(accumulator)
                         pos += accumulator
                         return decimalDigitResult
                     }
@@ -706,18 +704,30 @@ export class NSNumber {
                     while (pos < notNullEndPos!) {
                         yield incressAlgorithm()
                     }
-                    if (endPosition === undefined || endPosition === notNullEndPos) {
-                        if (!excludeEndPosition) {
-                            yield incressAlgorithm()
-                        }
-                        return
-                    }
 
-                    while (pos < endPosition) {
-                        yield null
+
+                    if (pos === notNullEndPos) {
+                        if (endPosition === undefined || notNullEndPos === endPosition) {
+                            if (!excludeEndPosition) {
+                                yield incressAlgorithm()
+                            }
+                            return
+                        }
+                        yield incressAlgorithm()
                         pos += accumulator
                     }
-                    return
+
+
+                    if (endPosition !== undefined) {
+                        while (pos < endPosition) {
+                            yield null
+                            pos += accumulator
+                        }
+
+                        if (pos === endPosition && !excludeEndPosition) {
+                            yield null
+                        }
+                    }
                     // 3.1.2--InGen Incressing END_____________
                 } else {
                     // 3.1.2--InGen Decressing ( startPosition < digitsCount )
@@ -726,30 +736,25 @@ export class NSNumber {
                         endPos = 0
                     }
 
-                    // if (endPos === startPosition) {
-                    //     if (!excludeStartPosition)
-                    //         yield currNsNumber.getDigit(startPosition)
-                    //     if (!excludeEndPosition)
-                    //         yield currNsNumber.getDigit(startPosition)
-                    //     return
-                    // }
-
-
                     let exp = digitsCount - startPosition
                     let lastNum = numBigInt
 
                     let startPos = startPosition
-                    if (!excludeStartPosition) {
-                        const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
-                        const numberRight = JSBI.remainder(lastNum, baseExp)
-                        const digitBigInt = JSBI.divide(numberRight, JSBI.divide(baseExp, baseBigInt))
-                        yield JSBI.toNumber(digitBigInt)
+                    let start: number
+                    const baseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(exp))
 
-                        lastNum = JSBI.divide(lastNum, baseExp)
-                        exp = Math.abs(accumulator)
-                    }
+                    const numberRight = JSBI.remainder(lastNum, baseExp)
+                    const digitBigInt = JSBI.divide(numberRight, JSBI.divide(baseExp, baseBigInt))
+                    start = JSBI.toNumber(digitBigInt)
+
+                    lastNum = JSBI.divide(lastNum, baseExp)
+                    exp = Math.abs(accumulator)
                     startPos += accumulator
+
+                    if (!excludeStartPosition) {
+                        yield start
+                    }
 
                     let pos = startPos
                     const decressingAlgorithm = () => {
@@ -800,59 +805,6 @@ export class NSNumber {
         }
         return numStr
     }
-
-
-
-    // /**
-    //  * Converts _NSNumber_ to another system _NSNumber_
-    //  * @param ns - _NumberSystem_ to convert to.
-    //  * @param validate - Defines if to validate arguments.
-    //  * 
-    //  * **Default _false_**
-    //  */
-    // toSystem(ns: NumberSystem, validate?: boolean) {
-    //     const validArgs = validateArguments({ ns, validate }, toSystemSchema)
-    //     ns = validArgs.ns
-
-    //     return ns.Number(this, false)
-    // }
-
-
-
-    // get digitsCount() {
-    //     if (!this._digitsCount) {
-    //         this._digitsCount = this.ns.countDigits(this, false)
-    //     }
-    //     return this._digitsCount
-    // }
-
-
-
-    // get digitsArr() {
-    //     const isPerformanceOptimized = this.ns.optimizationMode === 'performanceOptimized'
-    //     if (isPerformanceOptimized) {
-    //         if (!this._digitsArr) {
-    //             const decDigits = NumberSystem.decimalToDecDigitsArr(
-    //                 this.bigInt.toString(),
-    //                 this.ns.base,
-    //                 false
-    //             )
-    //             this._digitsArr = decDigits
-    //             this._digitsMap = null
-
-    //             this._digitsCount = this._digitsArr.length
-    //         }
-    //         return this._digitsArr
-    //     }
-
-    //     const decDigits = NumberSystem.decimalToDecDigitsArr(
-    //         this.bigInt.toString(),
-    //         this.ns.base,
-    //         false
-    //     )
-    //     this._digitsCount = decDigits.length
-    //     return decDigits
-    // }
 }
 
 
