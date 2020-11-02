@@ -264,7 +264,7 @@ export class NSNumber {
                 const startPos = startPosition + accumulator
                 let endPos = endPosition
                 if (endPosition === undefined) {
-                    endPos = monotonouslyIncressing ? digitsArr.length : 0
+                    endPos = monotonouslyIncressing ? digitsArr.length - 1 : 0
                 }
 
                 let pos = startPos
@@ -284,8 +284,22 @@ export class NSNumber {
                     }
                 }
 
-                if (pos === endPos && !excludeEndPosition) {
-                    yield pos < digitsArr.length ? digitsArr[pos] : null
+                if (pos === endPos) {
+                    if (!excludeEndPosition) {
+                        yield pos < digitsArr.length ? digitsArr[pos] : null
+                    }
+                    return
+                }
+
+                if (endPosition !== undefined) {
+                    while (pos < endPosition) {
+                        yield null
+                        pos += accumulator
+                    }
+
+                    if (pos === endPosition && !excludeEndPosition) {
+                        yield null
+                    }
                 }
             }
             // ___________GeneratorEnd___________
@@ -819,48 +833,3 @@ import {
     toSystemSchema,
 } from "../validations/NSNumberValidations"
 import { NumberSchema } from "../validations/NumberSystemValidations"
-
-
-
-
-// // 2.1.1
-// let lastNum = numBigInt
-// let expReducer = 1
-
-// let lastBaseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(startPos))
-
-// let pos = startPos
-// while (pos > endPos) {
-//     if (pos in digitsMap) {
-//         yield digitsMap[pos]
-//         expReducer++
-//     } else {
-//         lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
-
-//         const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
-//         digitsMap[pos] = JSBI.toNumber(digitBigInt)
-//         yield digitsMap[pos]
-
-//         lastNum = JSBI.remainder(lastNum, lastBaseExp)
-//         expReducer = 1
-//     }
-//     pos += accumulator
-// }
-
-// if (!excludeEndPosition) {
-//     if (pos in digitsMap) {
-//         yield digitsMap[pos]
-//         expReducer++
-//     } else {
-//         lastBaseExp = JSBI.divide(lastBaseExp, JSBI.exponentiate(baseBigInt, JSBI.BigInt(expReducer)))
-
-//         const digitBigInt = JSBI.remainder(JSBI.divide(lastNum, lastBaseExp), baseBigInt)
-//         digitsMap[pos] = JSBI.toNumber(digitBigInt)
-//         yield digitsMap[pos]
-
-//         lastNum = JSBI.remainder(lastNum, lastBaseExp)
-//         expReducer = 1
-//     }
-//     pos += accumulator
-// }
-// return

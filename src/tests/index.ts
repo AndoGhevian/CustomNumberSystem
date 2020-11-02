@@ -76,20 +76,36 @@ export const numbersAndDigitsGeneration = () => {
      */
     const leftConcatEnd: number = 100000
 
-    const sys10 = new NumberSystem([
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    // const sys10 = new NumberSystem([
+    //     '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'
+    // ], {}, true)
+    const sys3 = new NumberSystem([
+        '0', '1', '2'
     ], {}, true)
-    const nsNumber = sys10.Number('1234567890000')
-    const gen = nsNumber.decDigitsGenerator({
-        startPosition: 3,
-        endPosition: 13,
-        accumulator: 3,
-        excludeEndPosition: true,
+    const nsNumber = sys3.Number('12')
+    
+    let gen = nsNumber.decDigitsGenerator({
+        startPosition: 0,
+        // endPosition: 13,
+        accumulator: 2,
+        // excludeEndPosition: true,
         // excludeStartPosition: true
     })
     for (const dig of gen()) {
-        console.log(dig)
+        gen = nsNumber.decDigitsGenerator({
+            startPosition: 1,
+            // endPosition: 13,
+            accumulator: 2,
+            // excludeEndPosition: true,
+            // excludeStartPosition: true
+        })
+        for (const dig of gen()) {
+            console.log(`Inner ${dig}`)
+            for (const dig of gen()) {
+                console.log(`Inner ${dig}`)
+            }
+        }
+        console.log(nsNumber.toString())
     }
-    console.log(nsNumber['_digitsMap'])
     // ____________________________________________________________
 }
