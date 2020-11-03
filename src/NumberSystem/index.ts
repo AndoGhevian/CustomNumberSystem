@@ -1,6 +1,5 @@
-import { options } from "joi"
 import JSBI from "jsbi"
-import { OptimizaionMode } from ".."
+import { OptimizaionMode } from "../commonTypes"
 
 
 /**
@@ -162,36 +161,6 @@ export class NumberSystem {
         }
         return sumBigInt.toString()
     }
-
-    // /**
-    //  * Calculates digits count for number within system with given _base_.
-    //  * @param base - Base to calculate digits within. Must be integer greater than _1_.
-    //  * @param nsNumber - _NSNumber_ in any system.
-    //  * @param validate - Defines if to validate arguments.
-    //  * 
-    //  * **Default - _false_**
-    //  */
-    // static countDigits(base: number, nsNumber: NSNumber, validate?: boolean) {
-    //     const validArgs = validateArguments({ base, nsNumber, validate }, countDigitsStaticSchema)
-    //     base = validArgs.base
-    //     nsNumber = validArgs.nsNumber
-
-    //     const sameBase = base === nsNumber.ns.base
-    //     if (sameBase) {
-    //         return nsNumber.countDigits()
-    //     }
-
-    //     const baseBigInt = JSBI.BigInt(base)
-
-    //     let dividedBigInt = nsNumber.bigInt
-    //     let digitsCount = 0
-    //     do {
-    //         digitsCount++
-    //         dividedBigInt = JSBI.divide(dividedBigInt, baseBigInt)
-    //     } while (!JSBI.equal(dividedBigInt, NumberSystem.ZERO_BIG_INT))
-
-    //     return digitsCount
-    // }
 
     /**
      * Adds two _NSNumber_ instances in current _NumberSystem_.
@@ -549,6 +518,38 @@ export class NumberSystem {
         const sys = this
         return new NSNumber(sys, number, false)
     }
+
+
+
+    // /**
+    //  * Calculates digits count for number within system with given _base_.
+    //  * @param base - Base to calculate digits within. Must be integer greater than _1_.
+    //  * @param nsNumber - _NSNumber_ in any system.
+    //  * @param validate - Defines if to validate arguments.
+    //  * 
+    //  * **Default - _false_**
+    //  */
+    // static countDigits(base: number, nsNumber: NSNumber, validate?: boolean) {
+    //     const validArgs = validateArguments({ base, nsNumber, validate }, countDigitsStaticSchema)
+    //     base = validArgs.base
+    //     nsNumber = validArgs.nsNumber
+
+    //     const sameBase = base === nsNumber.ns.base
+    //     if (sameBase) {
+    //         return nsNumber.countDigits()
+    //     }
+
+    //     const baseBigInt = JSBI.BigInt(base)
+
+    //     let dividedBigInt = nsNumber.bigInt
+    //     let digitsCount = 0
+    //     do {
+    //         digitsCount++
+    //         dividedBigInt = JSBI.divide(dividedBigInt, baseBigInt)
+    //     } while (!JSBI.equal(dividedBigInt, NumberSystem.ZERO_BIG_INT))
+
+    //     return digitsCount
+    // }
 }
 
 
@@ -564,5 +565,4 @@ import {
     NumberSchema,
     nsNumberManualGeneratorSchema,
     nsNumberGeneratorSchema,
-    countDigitsStaticSchema,
 } from "../validations/NumberSystemValidations"
