@@ -318,6 +318,9 @@ export class NSNumber {
                 const digitsCount = this._digitsCount
                 // ___________Generator___________
                 return function* () {
+                    if(currNsNumber._digitsArr) {
+                        return currNsNumber.decDigitsGenerator(optional)()
+                    }
                     const monotonouslyIncressing = accumulator > 0 ? true : false
                     if (startPosition >= digitsCount) {
                         // 2.1.1--InGen startPosition >= digitsCount (If start position more or equal than digits count)
@@ -830,6 +833,4 @@ import {
     decDigitsGeneratorSchema,
     getDigitSchema,
     NSNumberSchema,
-    toSystemSchema,
 } from "../validations/NSNumberValidations"
-import { NumberSchema } from "../validations/NumberSystemValidations"

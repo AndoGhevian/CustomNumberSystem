@@ -31,15 +31,6 @@ export const NSNumberSchema = {
     })
 }
 
-export const toSystemSchema = {
-    defaultSetter: defaultsSchema.validateDefaults,
-    niche: Joi.object({
-        ns: Joi.object()
-            .instance(NumberSystem)
-            .required(),
-    })
-}
-
 export const getDigitSchema = {
     niche: Joi.object({
         position: Joi.number()

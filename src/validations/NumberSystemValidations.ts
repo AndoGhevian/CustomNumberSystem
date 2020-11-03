@@ -84,15 +84,6 @@ export const opSchema = {
     })
 }
 
-export const toStringSchema = {
-    defaultSetter: defaultsSchema.validateDefaults,
-    niche: Joi.object({
-        nsNumber: Joi.object()
-            .instance(NSNumber)
-            .required(),
-    })
-}
-
 export const addToDecimalDigsArrSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
@@ -166,45 +157,4 @@ export const NumberSchema = {
                 )
         ]
     })
-}
-
-export const countDigitsSchema = {
-    niche: Joi.object({
-        nsNumber: Joi.object()
-            .instance(NSNumber)
-            .required(),
-    })
-}
-
-export const getDigitSchema = {
-    niche: Joi.object({
-        position: Joi.number()
-            .integer()
-            .required(),
-        nsNumber: Joi.object()
-            .instance(NSNumber)
-            .required(),
-    })
-}
-
-export const decDigitsGeneratorSchema = {
-    defaultSetter: defaultsSchema.decDigitsGeneratorDefaults,
-    niche: Joi.object({
-        nsNumber: Joi.object()
-            .instance(NSNumber)
-            .required(),
-        optional: Joi.object({
-            startPosition: Joi.number()
-                .min(0)
-                .integer(),
-            endPosition: Joi.number()
-                .min(0)
-                .integer(),
-            accumulator: Joi.number()
-                .integer()
-                .invalid(0),
-            excludeStartPosition: Joi.boolean(),
-            excludeEndPosition: Joi.boolean(),
-        }),
-    }),
 }

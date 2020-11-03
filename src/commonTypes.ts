@@ -1,5 +1,3 @@
-import { NSNumber } from "."
-
 export const HorizontalDirection: ['left', 'right'] = ['left', 'right']
 export const VarticalDirection: ['up', 'down'] = ['up', 'down']
 export const OptimizaionMode: ['memoiryOptimized', 'performanceOptimized'] = ['memoiryOptimized', 'performanceOptimized']
@@ -18,7 +16,7 @@ export type RequireFields<T, B extends keyof NonNullable<T>> = Required<
 > & Omit<NonNullable<T>, B>
 
 /**
- * Creates new Interface by requiring _keys_ from **B**.
+ * Creates new Interface by requiring _keys_ Except keys from **B**.
  */
 export type RequireExceptFields<T, B extends keyof NonNullable<T>> = Required<
     Omit<
