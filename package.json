@@ -13,7 +13,9 @@
   },
   "keywords": [
     "ns",
-    "custom"
+    "number",
+    "custom",
+    "generator"
   ],
   "author": "Ando",
   "repository": {
@@ -26,7 +28,6 @@
     "nodemon": "^2.0.4"
   },
   "dependencies": {
-    "dot-prop": "^6.0.0",
     "joi": "^17.2.1",
     "jsbi": "^3.1.4"
   }

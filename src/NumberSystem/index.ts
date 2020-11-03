@@ -263,10 +263,10 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
              */
             lastNsNumber?: NSNumber<any> | null,
             /**
-             * String representation of last number after applying to it accumulator
+             * Decimal string representation of last number after applying to it accumulator
              * ( negative numbers will also be presented unlike first argument ).
              */
-            lastNumberStr?: string,
+            lastNumberDecStr?: string,
         ) => number | string | NSNumber<any> | null,
         optional?: {
             /**
@@ -309,7 +309,19 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
                 yield sumNsNumber
             }
 
-            let acc = accumulator()
+            let acc: string | number | NSNumber<any> | null
+            switch (accumulator.length) {
+                case 2:
+                    acc = accumulator(sumNsNumber, sumNsNumber.bigInt.toString())
+                    break
+                case 1:
+                    acc = accumulator(sumNsNumber)
+                    break
+                case 0:
+                default:
+                    acc = accumulator()
+            }
+
             while (true) {
                 if (acc === null) return
 
@@ -401,7 +413,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
         const sys = this
         const zeroNsNumber = sys.Number(0, false)
 
-        startNsNumber = sys.Number(startNsNumber, false)
+        const convertedStartNsNumber = sys.Number(startNsNumber, false)
 
         const accumulator = optional!.accumulator!
         const accBigInt = accumulator instanceof NSNumber ? accumulator.bigInt : JSBI.BigInt(accumulator)
@@ -413,10 +425,10 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
 
             return function* () {
                 if (!optional!.excludeStart) {
-                    yield startNsNumber
+                    yield convertedStartNsNumber
                 }
 
-                let sumBigInt = JSBI.add(startNsNumber.bigInt, accBigInt)
+                let sumBigInt = JSBI.add(convertedStartNsNumber.bigInt, accBigInt)
                 while (JSBI.lessThan(endNsNumber.bigInt, sumBigInt)) {
                     yield sys.Number(sumBigInt.toString(), false)
 
@@ -434,10 +446,10 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
 
                 return function* () {
                     if (!optional!.excludeStart) {
-                        yield startNsNumber
+                        yield convertedStartNsNumber
                     }
 
-                    let sumNsNumber = sys.add(startNsNumber, accNsNumber, false)
+                    let sumNsNumber = sys.add(convertedStartNsNumber, accNsNumber, false)
 
                     while (JSBI.lessThan(sumNsNumber.bigInt, endNsNumber.bigInt)) {
                         yield sumNsNumber
@@ -453,10 +465,10 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
 
             return function* () {
                 if (!optional!.excludeStart) {
-                    yield startNsNumber
+                    yield convertedStartNsNumber
                 }
 
-                let sumNsNumber = startNsNumber
+                let sumNsNumber = convertedStartNsNumber
                 do {
                     sumNsNumber = sys.add(sumNsNumber, accNsNumber, false)
                     yield sumNsNumber
@@ -498,8 +510,8 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
      */
     maxInRank(rank: number, validate?: boolean) {
         const validArgs = validateArguments({ rank, validate }, minMaxInRankSchema)
-        rank = validArgs.number
-        
+        rank = validArgs.rank
+
         if (rank in this._maxRankMap) {
             return this._maxRankMap[rank]
         }
@@ -509,7 +521,10 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
             digArr[i] = maxDig
         }
         const nsNumber = this.Number(digArr, false)
-        this._maxRankMap[rank] = nsNumber
+        if (!(rank in this._maxRankMap)) {
+            this._maxRankMap[rank] = nsNumber
+        }
+        return nsNumber
     }
 
     /**
@@ -521,95 +536,25 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
      */
     minInRank(rank: number, validate?: boolean) {
         const validArgs = validateArguments({ rank, validate }, minMaxInRankSchema)
-        rank = validArgs.number
+        rank = validArgs.rank
 
         if (rank in this._minRankMap) {
             return this._minRankMap[rank]
         }
         const digArr: number[] = [1]
-        for (let i = 1; i < rank; i++) {
-            digArr[i] = 0
+        if (rank > 1) {
+            for (let i = 1; i < rank; i++) {
+                digArr[i] = 0
+            }
+        } else {
+            digArr[0] = 0
         }
         const nsNumber = this.Number(digArr, false)
-        this._minRankMap[rank] = nsNumber
+        if (!(rank in this._minRankMap)) {
+            this._minRankMap[rank] = nsNumber
+        }
+        return nsNumber
     }
-
-
-
-    // /**
-    //  * Calculates digits count for number within system with given _base_.
-    //  * @param base - Base to calculate digits within. Must be integer greater than _1_.
-    //  * @param nsNumber - _NSNumber_ in any system.
-    //  * @param validate - Defines if to validate arguments.
-    //  * 
-    //  * **Default - _false_**
-    //  */
-    // static countDigits(base: number, nsNumber: NSNumber, validate?: boolean) {
-    //     const validArgs = validateArguments({ base, nsNumber, validate }, countDigitsStaticSchema)
-    //     base = validArgs.base
-    //     nsNumber = validArgs.nsNumber
-
-    //     const sameBase = base === nsNumber.ns.base
-    //     if (sameBase) {
-    //         return nsNumber.countDigits()
-    //     }
-
-    //     const baseBigInt = JSBI.BigInt(base)
-
-    //     let dividedBigInt = nsNumber.bigInt
-    //     let digitsCount = 0
-    //     do {
-    //         digitsCount++
-    //         dividedBigInt = JSBI.divide(dividedBigInt, baseBigInt)
-    //     } while (!JSBI.equal(dividedBigInt, NumberSystem.ZERO_BIG_INT))
-
-    //     return digitsCount
-    // }
-
-
-
-    // /**
-    //  * Returns array of digits in provided _base_ for given non negative integer number.
-    //  * Digits will be presented as decimals.
-    //  * i.e. given number will be converted to _base_ and resulting digits will be presented in array as decimals.
-    //  * @param decimal - Non negative Integer( decimal ) number represented eather by Allowed Number or String.
-    //  * 
-    //  * NOTE: 
-    //  * - Allowed number means _number_ < _Number.MAX_SAFE_INTEGER_
-    //  * - Any length number can be provided with _string_.
-    //  * @param base - Base to calculate digits within.
-    //  * i.e. if _base = 16_, digits will be integers of range [0, 15]. Base must be allowed number.
-    //  * If string present, it will be converted to allowed number.
-    //  * @param validate - Defines if to validate arguments.
-    //  * 
-    //  * **Default - _false_**
-    //  */
-    // static decimalToDecDigitsArr(decimal: string, base: number, validate?: boolean): number[]
-    // static decimalToDecDigitsArr(decimal: number, base: number, validate?: boolean): number[]
-    // static decimalToDecDigitsArr(decimal: any, base: number, validate?: boolean) {
-    //     const validArgs = validateArguments({ decimal, base, validate }, decimalToDecDigitsArrSchema)
-    //     decimal = validArgs.decimal
-    //     base = validArgs.base
-
-    //     const digDecArray = []
-    //     let acc = JSBI.BigInt(decimal)
-    //     if (JSBI.equal(acc, JSBI.BigInt(0))) {
-    //         return [0]
-    //     }
-
-    //     const baseBigInt = JSBI.BigInt(base)
-    //     for (let mul = baseBigInt; JSBI.GT(acc, 0); mul = JSBI.multiply(mul, baseBigInt)) {
-    //         const remainder = JSBI.remainder(acc, mul)
-
-    //         const digitDecNumBigInt = JSBI.divide(remainder, JSBI.divide(mul, baseBigInt))
-
-    //         const digitDecNum = JSBI.toNumber(digitDecNumBigInt)
-    //         digDecArray.push(digitDecNum)
-
-    //         acc = JSBI.subtract(acc, remainder)
-    //     }
-    //     return digDecArray.reverse()
-    // }
 }
 
 
@@ -619,7 +564,6 @@ import { NSNumber } from "../NSNumber"
 import { validateArguments } from "../utils"
 import {
     NumberSystemSchema,
-    decimalToDecDigitsArrSchema,
     decDigitsArrToDecimalSchema,
     opSchema,
     NumberSchema,
