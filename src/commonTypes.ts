@@ -6,6 +6,13 @@ export type HorizontalDirection = (typeof HorizontalDirection)[number]
 export type VarticalDirection = (typeof VarticalDirection)[number]
 export type OptimizaionMode = (typeof OptimizaionMode)[number]
 
+
+export interface SystemDigitsConf {
+    base: number,
+    digGen: (pow: number) => string,
+}
+
+
 /**
  * Creates new Interface by requiring _keys_ from **B**.
  */

@@ -8,16 +8,27 @@ import { NSNumber } from "../NSNumber";
 export const NumberSystemSchema = {
     defaultSetter: defaultsSchema.NumberSystemDefaults,
     niche: Joi.object({
-        digits: Joi.array()
-            .min(2)
-            .items(
-                Joi.string()
-                    .min(1)
+        digits: Joi.alternatives()
+            .try(
+                Joi.array()
+                    .min(2)
+                    .items(
+                        Joi.string()
+                            .min(1)
+                    )
+                    .unique(),
+                Joi.object({
+                    digGen: Joi.function()
+                        .required(),
+                    base: Joi.number()
+                        .min(2)
+                        .integer()
+                        .required(),
+                })
             )
-            .unique()
             .required(),
         optimization: Joi.string()
-                .valid(...OptimizaionMode)
+            .valid(...OptimizaionMode)
     })
 }
 
@@ -156,5 +167,14 @@ export const NumberSchema = {
                         .less(Joi.ref('...ns.base'))
                 )
         ]
+    })
+}
+
+export const minMaxInRankSchema = {
+    niche: Joi.object({
+        rank: Joi.number()
+            .min(1)
+            .integer()
+            .required()
     })
 }

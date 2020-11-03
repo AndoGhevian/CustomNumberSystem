@@ -1,12 +1,15 @@
 import JSBI from "jsbi"
-import { RequireExceptFields } from ".."
+import {
+    RequireExceptFields,
+    SystemDigitsConf
+} from "../commonTypes"
 
 
 /**
  * Represents provided number in given number system.
  */
-export class NSNumber {
-    readonly ns: NumberSystem = null as any
+export class NSNumber<T extends string[] | SystemDigitsConf> {
+    readonly ns: NumberSystem<T> = null as any
     readonly bigInt: JSBI = null as any
 
     private _digitsCount: number = null as any
@@ -28,11 +31,11 @@ export class NSNumber {
      * 
      * **Default _false_**
      */
-    constructor(ns: NumberSystem, number?: number, validate?: boolean)
-    constructor(ns: NumberSystem, numberStr?: string, validate?: boolean)
-    constructor(ns: NumberSystem, nsNumber: NSNumber, validate?: boolean)
-    constructor(ns: NumberSystem, decimalDigArray?: number[], validate?: boolean)
-    constructor(ns: NumberSystem, number?: any, validate?: boolean) {
+    constructor(ns: NumberSystem<T>, number?: number, validate?: boolean)
+    constructor(ns: NumberSystem<T>, numberStr?: string, validate?: boolean)
+    constructor(ns: NumberSystem<T>, nsNumber: NSNumber<any>, validate?: boolean)
+    constructor(ns: NumberSystem<T>, decimalDigArray?: number[], validate?: boolean)
+    constructor(ns: NumberSystem<T>, number?: any, validate?: boolean) {
         const validArgs = validateArguments({ ns, number, validate }, NSNumberSchema)
         ns = validArgs.ns
         number = validArgs.number
@@ -316,8 +319,8 @@ export class NSNumber {
                 const digitsCount = this._digitsCount
                 // ___________Generator___________
                 return function* () {
-                    if(currNsNumber._digitsArr) {
-                        return currNsNumber.decDigitsGenerator(optional)()
+                    if (currNsNumber._digitsArr) {
+                        return currNsNumber.decDigitsGenerator(optional, false)()
                     }
                     const monotonouslyIncressing = accumulator > 0 ? true : false
                     if (startPosition >= digitsCount) {
@@ -815,10 +818,18 @@ export class NSNumber {
         }
 
         let numStr = ''
-        for (const dig of iterable) {
-            numStr += this.ns.digits[dig as number]
+        if (this.ns.digits instanceof Array) {
+            for (const dig of iterable) {
+                numStr += this.ns.digits[dig as number]
+            }
+            return numStr
+        } else {
+            const digGen = (this.ns.digits as (pow: number) => string)
+            for (const dig of iterable) {
+                numStr += digGen(dig as number)
+            }
+            return numStr
         }
-        return numStr
     }
 }
 
