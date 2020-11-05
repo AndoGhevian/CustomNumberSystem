@@ -57,3 +57,24 @@ export const decDigitsGeneratorSchema = {
         }),
     }),
 }
+
+export const opSchema = {
+    defaultSetter: defaultsSchema.validateDefaults,
+    niche: Joi.object({
+        nsNumber: Joi.object()
+            .instance(NSNumber)
+            .required(),
+    })
+}
+
+export const compareOpSchema = {
+    defaultSetter: defaultsSchema.validateDefaults,
+    niche: Joi.object({
+        nsNumber1: Joi.object()
+            .instance(NSNumber)
+            .required(),
+        nsNumber2: Joi.object()
+            .instance(NSNumber)
+            .required(),
+    })
+}

@@ -77,18 +77,6 @@ export const countDigitsStaticSchema = {
     })
 }
 
-export const opSchema = {
-    defaultSetter: defaultsSchema.validateDefaults,
-    niche: Joi.object({
-        nsNumber1: Joi.object()
-            .instance(NSNumber)
-            .required(),
-        nsNumber2: Joi.object()
-            .instance(NSNumber)
-            .required(),
-    })
-}
-
 export const addToDecimalDigsArrSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({

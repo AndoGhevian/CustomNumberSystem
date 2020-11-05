@@ -87,6 +87,56 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
         }
     }
 
+    /**
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ < _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static lessThan(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, compareOpSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.lessThan(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
+
+    /**
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ <= _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static lessThanOrEqual(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, compareOpSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.lessThanOrEqual(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
+
+    /**
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ == _nsNumber2_
+     * 
+     * @param nsNumber1 - NSNumber.
+     * @param nsNumber2 - NSNumber.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    static equal(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber1, nsNumber2, validate }, compareOpSchema)
+        nsNumber1 = validArgs.nsNumber1
+        nsNumber2 = validArgs.nsNumber2
+
+        return JSBI.equal(nsNumber1.bigInt, nsNumber2.bigInt)
+    }
 
     /**
      * Returns digit at give position of current _NSNumber_ or _null_ if not existing digit position provided.
@@ -833,6 +883,107 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
             return numStr
         }
     }
+
+    /**
+     * Adds two _NSNumber_ instances in current _NumberSystem_.
+     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
+     * @param nsNumber1 - number to add.
+     * @param nsNumber2 - number to add.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    add(nsNumber: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, opSchema)
+        nsNumber = validArgs.nsNumber
+
+        const sys = this.ns
+        const sum = JSBI.add(this.bigInt, nsNumber.bigInt)
+
+        return sys.Number(sum.toString(), false)
+    }
+
+    /**
+     * Subtract two _NSNumber_ instances in current _NumberSystem_.
+     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
+     * 
+     * **NOTE: If result less than zero, _null_ will be returned.**
+     * @param nsNumber1 - minuend number.
+     * @param nsNumber2 - reducer number.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    subtract(nsNumber: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, opSchema)
+        nsNumber = validArgs.nsNumber
+
+        const sys = this.ns
+        const subtraction = JSBI.subtract(this.bigInt, nsNumber.bigInt)
+        if (JSBI.lessThan(subtraction, NumberSystem['ZERO_BIG_INT'])) {
+            return null
+        }
+        return sys.Number(subtraction.toString(), false)
+    }
+
+    /**
+     * Calculates _nsNumber1_ modulo _nsNumber2_ in current _NumberSystem_.
+     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
+     * @param nsNumber1 - dividend number.
+     * @param nsNumber2 - divider number.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    remainder(nsNumber: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, opSchema)
+        nsNumber = validArgs.nsNumber
+
+        const sys = this.ns
+        const remainder = JSBI.remainder(this.bigInt, nsNumber.bigInt)
+
+        return sys.Number(remainder.toString(), false)
+    }
+
+    /**
+     * Multiply _nsNumber1_ by _nsNumber2_ in current _NumberSystem_.
+     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
+     * @param nsNumber1 - multipler number.
+     * @param nsNumber2 - multipler number.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    multiply(nsNumber: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, opSchema)
+        nsNumber = validArgs.nsNumber
+
+        const sys = this.ns
+        const multiply = JSBI.multiply(this.bigInt, nsNumber.bigInt)
+
+        return sys.Number(multiply.toString(), false)
+    }
+
+    /**
+     * Divide _nsNumber1_ by _nsNumber2_ in current _NumberSystem_
+     * and _NSNumber_ with integer part of division will be returned.
+     * 
+     * Result _NSNumber_ will be represented in current _NumberSystem_.
+     * @param nsNumber1 - number to add.
+     * @param nsNumber2 - number to add.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    divide(nsNumber: NSNumber<any>, validate?: boolean) {
+        const validArgs = validateArguments({ nsNumber, validate }, opSchema)
+        nsNumber = validArgs.nsNumber
+
+        const sys = this.ns
+        const division = JSBI.divide(this.bigInt, nsNumber.bigInt)
+
+        return sys.Number(division.toString(), false)
+    }
 }
 
 
@@ -841,7 +992,9 @@ import { NumberSystem } from "../NumberSystem"
 // validation related imports
 import { validateArguments } from "../utils"
 import {
+    compareOpSchema,
     decDigitsGeneratorSchema,
     getDigitSchema,
     NSNumberSchema,
+    opSchema,
 } from "../validations/NSNumber"
