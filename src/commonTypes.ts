@@ -7,9 +7,23 @@ export type VarticalDirection = (typeof VarticalDirection)[number]
 export type OptimizaionMode = (typeof OptimizaionMode)[number]
 
 
-export interface SystemDigitsConf {
+export interface SystemDigitsConfig {
+    /**
+     * Base of digits system.
+     */
     base: number,
-    digGen: (pow: number) => string,
+    /**
+     * Max allowed base of current digits system.
+     */
+    readonly maxBase: number
+    /**
+     * Digits generator
+     */
+    digGen: (...powers: number[]) => (string | undefined)[],
+    /**
+     * Defines if _digGen_ can accept multiple powers as arguments to return digits for.
+     */
+    dinamicArity?: boolean,
 }
 
 

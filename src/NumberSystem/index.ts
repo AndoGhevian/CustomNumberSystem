@@ -1,18 +1,26 @@
 import JSBI from "jsbi"
 import {
     OptimizaionMode,
-    SystemDigitsConf,
+    SystemDigitsConfig,
 } from "../commonTypes"
 
 
 /**
  * Represents new number system, with provided digits.
  */
-export class NumberSystem<T extends string[] | SystemDigitsConf> {
+export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     /**
      * Digits of current number system.
      */
-    readonly digits: T extends SystemDigitsConf ? T['digGen'] : string[]
+    readonly digits: T extends SystemDigitsConfig ? T['digGen'] : string[]
+
+    /**
+     * Defines if _digits_ is a function which accept dinamic number _power_ of arguments.
+     * 
+     * NOTE: _digits_ can be digits generator function,
+     * but can accept single argument of power to return digit for.
+     */
+    readonly dinamicAritySystem: boolean
     /**
      * Base of Number System.
      */
@@ -44,17 +52,155 @@ export class NumberSystem<T extends string[] | SystemDigitsConf> {
         options = validArgs.options
 
         this.optimizationMode = options!.optimization!
+        this.dinamicAritySystem = false
 
-        if (digits instanceof Array) {
-            this.digits = digits as any
-            this.base = digits.length
-        } else {
-            const digConf = digits as SystemDigitsConf
+        const { error: isNotSystemDigitsConfig } = SystemDigitsConfigSchema.validate(digits)
+        if (!isNotSystemDigitsConfig) {
+            const digConf = digits as SystemDigitsConfig
             this.digits = digConf.digGen as any
             this.base = digConf.base
+            this.dinamicAritySystem = !!digConf.dinamicArity
+        } else {
+            const digitsArr = digits as string[]
+            this.digits = digitsArr as any
+            this.base = digitsArr.length
         }
 
         this.baseBigInt = JSBI.BigInt(this.base)
+    }
+
+    static systemDigitsConfig(...mixture: ([number, number] | [string, string] | number | string | SystemDigitsConfig)[]): SystemDigitsConfig {
+        type CategoryStructure = {
+            currentBase: number
+            dig: string | ((...powers: number[]) => string[])
+        }
+        const mixtureStructure: CategoryStructure[] = []
+
+        let base = 0
+        for (const item of mixture) {
+            let categoryStructure: CategoryStructure
+            switch (typeof item) {
+                case 'number':
+                    base++
+                    categoryStructure = {
+                        currentBase: base,
+                        dig: String.fromCodePoint(item),
+                    }
+                    break
+                case 'string':
+                    base++
+                    categoryStructure = {
+                        currentBase: base,
+                        dig: item,
+                    }
+                    break
+                case 'object':
+                default:
+                    const { error: isNotSystemDigitsConfig } = SystemDigitsConfigSchema.validate(item)
+                    if (!isNotSystemDigitsConfig) {
+                        const sysDigConf = item as SystemDigitsConfig
+                        base += sysDigConf.base
+                        categoryStructure = {
+                            currentBase: base,
+                        } as any
+                        if (!sysDigConf.dinamicArity) {
+                            categoryStructure.dig = (...powers: number[]) => powers.map(pow => sysDigConf.digGen(pow)[0]) as string[]
+                        } else {
+                            categoryStructure.dig = (...powers: number[]) => sysDigConf.digGen(...powers) as string[]
+                        }
+                    } else if (item instanceof Array) {
+                        let startNum: number = item[0] as any
+                        let endNum: number = item[1] as any
+                        if (typeof item[0] === 'string') {
+                            startNum = item[0].codePointAt(0)!
+                            endNum = (item[1] as string).codePointAt(0)!
+                        }
+
+                        base += 1 + Math.abs(endNum - startNum)
+                        categoryStructure = {
+                            currentBase: base,
+                        } as any
+                        if (startNum < endNum) {
+                            categoryStructure.dig = (...powers: number[]) => {
+                                return powers.map(pow => String.fromCodePoint(startNum + pow))
+                            }
+                        } else {
+                            categoryStructure.dig = (...powers: number[]) => {
+                                return powers.map(pow => String.fromCodePoint(startNum - pow))
+                            }
+                        }
+                    }
+            }
+            mixtureStructure.push(categoryStructure!)
+        }
+        return {
+            base,
+            maxBase: base,
+            dinamicArity: true,
+            digGen(...powers: number[]) {
+                const categorized: {
+                    [key: number]: number[]
+                } = {}
+
+                const pozitionMatrix: [number, number][] = []
+
+                for (let powIndex = 0; powIndex < powers.length; powIndex++) {
+                    const pow = powers[powIndex]
+                    if (pow < 0 || pow >= this.base) {
+                        if (!(-1 in categorized)) {
+                            categorized[-1] = []
+                        }
+                        const inCategoryIndex = categorized[-1].push(pow) - 1
+                        pozitionMatrix[powIndex] = [-1, inCategoryIndex]
+                    } else {
+                        let lastBase = 0
+                        for (let categoryIndex = 0; categoryIndex < mixtureStructure.length; categoryIndex++) {
+                            const category = mixtureStructure[categoryIndex]
+                            if (pow < category.currentBase) {
+                                if (!(categoryIndex in categorized)) {
+                                    categorized[categoryIndex] = []
+                                }
+                                const inCategoryIndex = categorized[categoryIndex].push(pow - lastBase) - 1
+                                pozitionMatrix[powIndex] = [categoryIndex, inCategoryIndex]
+                                break
+                            }
+                            lastBase = category.currentBase
+                        }
+                    }
+                }
+
+                const categorizedResults: {
+                    [key: number]: string | undefined | (string | undefined)[]
+                } = {}
+
+                if (-1 in categorized) {
+                    categorizedResults[-1] = undefined
+                    delete categorized[-1]
+                }
+
+                for (const key in categorized) {
+                    if (typeof mixtureStructure[key].dig === 'function') {
+                        const digFunc = mixtureStructure[key].dig as (...powers: number[]) => string[]
+                        categorizedResults[key] = digFunc(...categorized[key])
+                    } else {
+                        categorizedResults[key] = mixtureStructure[key].dig as string
+                    }
+                }
+
+                return powers.map((pow, powIndex) => {
+                    const placementInfo = pozitionMatrix[powIndex]
+                    const categoryIndex = placementInfo[0]
+                    const categoryResult = categorizedResults[categoryIndex]
+
+                    if (categoryResult instanceof Array) {
+                        const inCategoryIndex = placementInfo[1]
+                        return categoryResult[inCategoryIndex]
+                    }
+
+                    return categoryResult
+                })
+            }
+        }
     }
 
     /**
@@ -570,4 +716,5 @@ import {
     nsNumberManualGeneratorSchema,
     nsNumberGeneratorSchema,
     minMaxInRankSchema,
-} from "../validations/NumberSystemValidations"
+} from "../validations/NumberSystem"
+import { SystemDigitsConfigSchema } from "../validations/SystemDigitsConfig"

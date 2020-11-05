@@ -54,3 +54,21 @@ export const numbersAndDigitsGeneration = () => {
     `)
     // ____________________________________________________________
 }
+
+
+
+// const indexes: number[] = [-19, 1, 0, 1, 3, 2, 11, 7, system.base - 5, system.base - 1, system.base - 6, system.base - 7, system.base - 8, system.base - 5, 12, 13, 14, 16, 20, system.base, system.base - 1]
+// const results: (string | undefined)[] = []
+// for (let index of indexes) {
+//     results.push(...system.digGen(index))
+// }
+// const immediateResults = system.digGen(...indexes)
+
+// if (immediateResults.length === results.length && results.length === indexes.length) {
+
+//     console.log(results)
+//     console.log(results.length)
+//     console.log(results.every((res, index) => res === immediateResults[index]))
+// } else {
+//     console.log(false)
+// }

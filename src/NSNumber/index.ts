@@ -1,14 +1,14 @@
 import JSBI from "jsbi"
 import {
     RequireExceptFields,
-    SystemDigitsConf
+    SystemDigitsConfig
 } from "../commonTypes"
 
 
 /**
  * Represents provided number in given number system.
  */
-export class NSNumber<T extends string[] | SystemDigitsConf> {
+export class NSNumber<T extends string[] | SystemDigitsConfig> {
     readonly ns: NumberSystem<T> = null as any
     readonly bigInt: JSBI = null as any
 
@@ -818,15 +818,17 @@ export class NSNumber<T extends string[] | SystemDigitsConf> {
         }
 
         let numStr = ''
-        if (this.ns.digits instanceof Array) {
+        if (typeof this.ns.digits === 'function') {
+            const digGen = this.ns.digits as (...powers: number[]) => (string | undefined)[]
             for (const dig of iterable) {
-                numStr += this.ns.digits[dig as number]
+                const charMassive = digGen(dig as number)
+                numStr += charMassive[0]
             }
             return numStr
         } else {
-            const digGen = (this.ns.digits as (pow: number) => string)
+            const digCharArr = this.ns.digits as string[]
             for (const dig of iterable) {
-                numStr += digGen(dig as number)
+                numStr += digCharArr[dig as number]
             }
             return numStr
         }
@@ -842,4 +844,4 @@ import {
     decDigitsGeneratorSchema,
     getDigitSchema,
     NSNumberSchema,
-} from "../validations/NSNumberValidations"
+} from "../validations/NSNumber"

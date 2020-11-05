@@ -1,4 +1,6 @@
 # CustomNumberSystem
+**V1.1.0 BREAKING CHANGIS MADE, THIS README RELEATED TO V1.0.0, CONSIDER TO USE LSAT VERSION!!!**
+
 **With This You can flexibly generate strings also**
 
 Welcome to _Customizable Number Systems_ world. You will able to customize your system characters.

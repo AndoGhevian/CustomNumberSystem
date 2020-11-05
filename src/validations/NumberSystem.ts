@@ -3,6 +3,7 @@ import * as defaultsSchema from "./defaultsSchema";
 import { OptimizaionMode } from "../commonTypes";
 
 import { NSNumber } from "../NSNumber";
+import { SystemDigitsConfigSchema } from "./SystemDigitsConfig";
 
 
 export const NumberSystemSchema = {
@@ -17,14 +18,7 @@ export const NumberSystemSchema = {
                             .min(1)
                     )
                     .unique(),
-                Joi.object({
-                    digGen: Joi.function()
-                        .required(),
-                    base: Joi.number()
-                        .min(2)
-                        .integer()
-                        .required(),
-                })
+                SystemDigitsConfigSchema,
             )
             .required(),
         optimization: Joi.string()
