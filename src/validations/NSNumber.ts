@@ -31,7 +31,7 @@ export const NSNumberSchema = {
     })
 }
 
-export const getDigitSchema = {
+export const getPowerSchema = {
     niche: Joi.object({
         position: Joi.number()
             .integer()
@@ -39,8 +39,8 @@ export const getDigitSchema = {
     })
 }
 
-export const decDigitsGeneratorSchema = {
-    defaultSetter: defaultsSchema.decDigitsGeneratorDefaults,
+export const digitPowersGeneratorSchema = {
+    defaultSetter: defaultsSchema.digitPowersGeneratorDefaults,
     niche: Joi.object({
         optional: Joi.object({
             startPosition: Joi.number()
@@ -75,6 +75,15 @@ export const compareOpSchema = {
             .required(),
         nsNumber2: Joi.object()
             .instance(NSNumber)
+            .required(),
+    })
+}
+
+export const toSystemSchema = {
+    defaultSetter: defaultsSchema.validateDefaults,
+    niche: Joi.object({
+        ns: Joi.object()
+            .instance(NumberSystem)
             .required(),
     })
 }

@@ -7,26 +7,40 @@ export type VarticalDirection = (typeof VarticalDirection)[number]
 export type OptimizaionMode = (typeof OptimizaionMode)[number]
 
 
+/**
+ * Configuration to use when creating _NumberSystems_ or as preferred.
+ */
 export interface SystemDigitsConfig {
     /**
-     * Base of digits system.
+     * Defines maximum _power_ for which _digGen_ method is currently garanteed to return _digit_.
      */
     base: number,
     /**
-     * Max allowed base of current digits system.
+     * Defines maximum allowed _base_ value to change if needed.
      */
     readonly maxBase: number
     /**
-     * Digits generator
+     * **NOT VALIDATABLE!!!**
+     * 
+     * This function returns digits of corresponding powers.
+     * @param powers - Powers of digits to return in given order.
+     * Each power **MUST** be integer.
+     * 
+     * NOTE: If _dinamicArity_ is _false_, only single argument garanteed to be supported.
      */
     digGen: (...powers: number[]) => (string | undefined)[],
     /**
-     * Defines if _digGen_ can accept multiple powers as arguments to return digits for.
+     * Defines if _digGen_ method supports multiple _power_ arguments.
+     * 
+     * **Default - _false_**
      */
     dinamicArity?: boolean,
 }
 
 
+
+
+// Typescript Custom Utility Types.
 /**
  * Creates new Interface by requiring _keys_ from **B**.
  */

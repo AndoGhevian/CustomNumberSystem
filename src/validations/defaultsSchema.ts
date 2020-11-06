@@ -43,7 +43,7 @@ export const NSNumberDefaults = constructDefaultsSchema({
     validate: false,
 })
 
-export const decDigitsGeneratorDefaults = constructDefaultsSchema({
+export const digitPowersGeneratorDefaults = constructDefaultsSchema({
     optional: {
         startPosition: 0,
         accumulator: 1,

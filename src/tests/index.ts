@@ -32,7 +32,7 @@ export const numbersAndDigitsGeneration = () => {
 
         const nsNumber = sys.Number(i + stringForConcat)
 
-        const gen = nsNumber.decDigitsGenerator()
+        const gen = nsNumber.digitPowersGenerator()
         let digStr = ''
         for (let dig of gen()) {
             digStr += sys.digits[dig as any]

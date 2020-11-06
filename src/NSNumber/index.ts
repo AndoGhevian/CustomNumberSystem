@@ -6,27 +6,70 @@ import {
 
 
 /**
- * Represents provided number in given number system.
+ * Represents numbers in given _NumberSystem_ - _ns_.
  */
 export class NSNumber<T extends string[] | SystemDigitsConfig> {
+    /**
+     * _NumberSystem_ instance in which represented current number.
+     */
     readonly ns: NumberSystem<T> = null as any
+    /**
+     * _JSBI_ instance of current number. ( **_See NPM JSBI_** )
+     * 
+     * **NOTE: Consider to use this in critical cases,
+     * when you cannot achieve the desired result
+     * with this package.**
+     */
     readonly bigInt: JSBI = null as any
 
-    private _digitsCount: number = null as any
-
-    private _digitsArr: number[] | null = null
-    private _digitsMap: { [key: number]: number } | null = {}
-    private _digitsMapMax: number | null = 1
-    private _digitsMapLength: number | null = 0
+    /**
+     * Already calculated digits count.
+     */
+    protected _digitsCount: number = null as any
 
     /**
-     * @param ns - Number System object, in which number ( number digits array ) represented.
-     * @param number - number, string( representation of number ), _NSNumber_ object, **OR**
-     * Array of decimal digits in provided as argument Number System - _ns_.
+     * This will be immediately set to digits _powers_ array
+     * when all digits of number in current _NumberSystem_
+     * are calculated.
+     * 
+     * Initially set to _null_.
+     */
+    protected _digitsArr: number[] | null = null
+    /**
+     * Contains already calculated digits _powers_, maped to
+     * their positions.
+     * 
+     * When all digits are calculated,
+     * this will be immediately set to _null_.
+     */
+    protected _digitsMap: { [key: number]: number } | null = {}
+    /**
+     * Maximum power of calculated digits.
+     * 
+     * Initially set to _1_.
+     * 
+     * When all digits are calculated,
+     * this will be immediately set to _null_.
+     */
+    protected _digitsMapMax: number | null = 1
+    /**
+     * Calculated digits count placed in
+     * digits map.
+     * 
+     * When all digits are calculated,
+     * this will be immediately set to _null_.
+     */
+    protected _digitsMapLength: number | null = 0
+
+    /**
+     * @param ns - _NumberSystem_ instance in which number and its digits will be represented.
+     * @param number - Decimal number, string( representation of decimal number ),
+     * _NSNumber_ instance, or array of digit powers, in provided as argument _NumberSystem_ - _ns_.
      * 
      * **Default -**
      * - **If empty array provided  - _[0]_**
      * - **If nothing(_undefined_) -  _0_**
+     * 
      * @param validate - Defines if to validate arguments.
      * 
      * **Default _false_**
@@ -71,7 +114,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
                     break
                 }
                 if (number instanceof Array) {
-                    const numStr = NumberSystem.decDigitsArrToDecimal(number, this.ns.base, false)
+                    const numStr = NumberSystem.powersArrToDecimal(number, this.ns.base, false)
 
                     this.bigInt = JSBI.BigInt(numStr)
                     this._digitsCount = number.length
@@ -88,7 +131,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ < _nsNumber2_
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ < _nsNumber2_.
      * 
      * @param nsNumber1 - NSNumber.
      * @param nsNumber2 - NSNumber.
@@ -105,7 +148,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ <= _nsNumber2_
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ <= _nsNumber2_.
      * 
      * @param nsNumber1 - NSNumber.
      * @param nsNumber2 - NSNumber.
@@ -122,7 +165,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ == _nsNumber2_
+     * Compares two _NsNumbers_. Returnes true if _nsNumber1_ == _nsNumber2_.
      * 
      * @param nsNumber1 - NSNumber.
      * @param nsNumber2 - NSNumber.
@@ -139,14 +182,17 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Returns digit at give position of current _NSNumber_ or _null_ if not existing digit position provided.
-     * @param position - index of digit in current _NumberSystem_.
+     * Returns power of digit at give position of current number, or _null_ if not existing digit position provided.
+     * @param position - Index of digit to return power for.
+     * 
+     * **MUST** be integer.
+     * 
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
      */
-    getDigit(position: number, validate?: boolean) {
-        const validArgs = validateArguments({ position, validate }, getDigitSchema)
+    getPower(position: number, validate?: boolean) {
+        const validArgs = validateArguments({ position, validate }, getPowerSchema)
         position = validArgs.position
 
         if (position < 0) {
@@ -190,7 +236,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Calculates digits count for current _NSNumber_.
+     * Count digits of number in current _NumberSystem_.
      */
     countDigits() {
         if (this._digitsCount) {
@@ -222,16 +268,10 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
         this._digitsCount = digitsCount
 
         return digitsCount
-        // if (this._digitsMapMax) {
-        //     // const digitPosArr = Object.keys(this._digitsMap) as any[]
-
-        //     // minDigitsCount = digitPosArr.length ? Math.max(...digitPosArr) : 1
-        // }
     }
 
-
     /**
-     * decDigitsGenerator Helper function.
+     * digitPowersGenerator Helper function.
      */
     private _mapToArr() {
         if (this._digitsMapLength === this._digitsCount) {
@@ -245,38 +285,54 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
         }
     }
 
-    decDigitsGenerator(optional?: {
+    /**
+     * Generates digit powers of current number in current _NumberSystem_
+     * starting from _startPosition_ and ending in _endPosition_
+     * ( See **README** for more detatils ), using _accumulator_
+     * value as _step_ of generation.
+     * @param optional - Optional configurations for generator.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    digitPowersGenerator(optional?: {
         /**
-         * Digit position to start generating from.
-         * Must be greaterOrEqual to zero integer.
+         * Digit position to start generating powers from.
          * 
-         * **Default _0_ - It Means Generator will continue monotonously
-         * generate digits until edge position reached(0 or _Last Digit Position_).**
+         * **MUST** be nonnegative integer.
+         * 
+         * NOTE: If _startPosition_ out of digits posions range
+         * and it is monotonously increasing generator, i.e. accumulator > 0,
+         * then after considering _startPosition_, generator will immediately stop.
+         * 
+         * **Default _0_**
          */
         startPosition?: number,
         /**
-         * End digit position to generate.
-         * Must be greaterOrEqual to zero integer.
+         * Digit position to finish generate powers on.
+         * 
+         * If provided, **MUST** be nonnegative integer.
          * 
          * **Default _undefined_ - It Means Generator will continue monotonously
-         * generate digits until edge position reached(0 or _Last Digit Position_).**
+         * generate powers until last reachable _edge position_ reached(0 or _Last Digit Position_).**
          */
         endPosition?: number,
         /**
          * Accumulator given in number.
-         * Must be nonzero integer.
+         * 
+         * **MUST** be nonzero integer.
          * 
          * **Default - _1_**
          */
         accumulator?: number,
         /**
-         * Defines if to exclude start position when start generating digits.
+         * Defines if to exclude _startPosition_ when start generating powers.
          * 
          * **Default - _false_**
          */
         excludeStartPosition?: boolean,
         /**
-         * Defines if to exclude end position when reached generating digits.
+         * Defines if to exclude digit on _endPosition_ if reached.
          * 
          * **Default - _false_**
          */
@@ -287,7 +343,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
                 optional,
                 validate,
             },
-            decDigitsGeneratorSchema,
+            digitPowersGeneratorSchema,
         )
         optional = validArgs.optional
 
@@ -370,7 +426,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
                 // ___________Generator___________
                 return function* () {
                     if (currNsNumber._digitsArr) {
-                        return currNsNumber.decDigitsGenerator(optional, false)()
+                        return currNsNumber.digitPowersGenerator(optional, false)()
                     }
                     const monotonouslyIncressing = accumulator > 0 ? true : false
                     if (startPosition >= digitsCount) {
@@ -640,7 +696,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
             } else {
                 // 2.2 digitsCountNotCalcualted, digitsMapExists (If digits count not calculated)
                 this.countDigits()
-                return this.decDigitsGenerator(optional, false)
+                return this.digitPowersGenerator(optional, false)
                 // 2.2 digitsCountNotCalcualted, digitsMapExists END_____________
             }
         }
@@ -856,7 +912,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Returns string representation of provided number in current _NumberSystem_.
+     * Returns string representation of number in current _NumberSystem_.
      */
     toString() {
         let iterable: Generator<number | null> | string
@@ -864,7 +920,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
             iterable = this.bigInt.toString()
             this._digitsCount = iterable.length
         } else {
-            iterable = this.decDigitsGenerator()()
+            iterable = this.digitPowersGenerator()()
         }
 
         let numStr = ''
@@ -886,9 +942,9 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
 
     /**
      * Adds two _NSNumber_ instances in current _NumberSystem_.
-     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
-     * @param nsNumber1 - number to add.
-     * @param nsNumber2 - number to add.
+     * 
+     * Result will be represented in current _NumberSystem_.
+     * @param nsNumber - _NSNumber_ to add.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -905,11 +961,11 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
 
     /**
      * Subtract two _NSNumber_ instances in current _NumberSystem_.
-     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
+     * 
+     * Result will be represented in current _NumberSystem_.
      * 
      * **NOTE: If result less than zero, _null_ will be returned.**
-     * @param nsNumber1 - minuend number.
-     * @param nsNumber2 - reducer number.
+     * @param nsNumber - reducer number.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -927,10 +983,10 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Calculates _nsNumber1_ modulo _nsNumber2_ in current _NumberSystem_.
-     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
-     * @param nsNumber1 - dividend number.
-     * @param nsNumber2 - divider number.
+     * Calculates current number _modulo nsNumber2_  in current _NumberSystem_.
+     * 
+     * Result will be represented in current _NumberSystem_.
+     * @param nsNumber - divider number.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -946,10 +1002,10 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Multiply _nsNumber1_ by _nsNumber2_ in current _NumberSystem_.
-     * i.e. result _NSNumber_ will be represented in current _NumberSystem_.
-     * @param nsNumber1 - multipler number.
-     * @param nsNumber2 - multipler number.
+     * Multiply current number by _nsNumber_ in current _NumberSystem_.
+     * 
+     * Result will be represented in current _NumberSystem_.
+     * @param nsNumber - multipler number.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -965,12 +1021,11 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Divide _nsNumber1_ by _nsNumber2_ in current _NumberSystem_
-     * and _NSNumber_ with integer part of division will be returned.
+     * Divide current number by _nsNumber_ in current _NumberSystem_.
+     * _NSNumber_ of integer part of division will be returned.
      * 
-     * Result _NSNumber_ will be represented in current _NumberSystem_.
-     * @param nsNumber1 - number to add.
-     * @param nsNumber2 - number to add.
+     * Result will be represented in current _NumberSystem_.
+     * @param nsNumber - Divider _NSNumber_.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -984,6 +1039,22 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
 
         return sys.Number(division.toString(), false)
     }
+
+    /**
+     * Converts current number to given _NumberSystem_ - _ns_.
+     * 
+     * Result will be represented in provided _NumberSystem_ - _ns_.
+     * @param ns - _NumberSystem_ instance to convert to.
+     * @param validate - Defines if to validate arguments.
+     * 
+     * **Default - _false_**
+     */
+    toSystem(ns: NumberSystem<T>, validate?: boolean): NSNumber<T> {
+        const validArgs = validateArguments({ ns, validate }, toSystemSchema)
+        ns = validArgs.ns
+
+        return ns.Number(this, false)
+    }
 }
 
 
@@ -993,8 +1064,9 @@ import { NumberSystem } from "../NumberSystem"
 import { validateArguments } from "../utils"
 import {
     compareOpSchema,
-    decDigitsGeneratorSchema,
-    getDigitSchema,
+    digitPowersGeneratorSchema,
+    getPowerSchema,
     NSNumberSchema,
     opSchema,
+    toSystemSchema,
 } from "../validations/NSNumber"

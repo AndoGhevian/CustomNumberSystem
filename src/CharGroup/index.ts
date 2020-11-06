@@ -4,15 +4,16 @@ import {
 
 
 /**
- * Creates _SystemDigitsConfig_ instance from visual characters of string, to use when creating _NumberSystem_.
+ * Creates _SystemDigitsConfig_ instance from visual characters of string to use when creating _NumberSystems_.
  */
 export class CharGroup implements SystemDigitsConfig {
     base: number = 0
     dinamicArity = true
-
     readonly maxBase: number
 
-
+    /**
+     * Chars array of string provided to constructor.
+     */
     protected readonly charArr: string[] = []
 
     /**
@@ -33,13 +34,6 @@ export class CharGroup implements SystemDigitsConfig {
         this.maxBase = this.base
     }
 
-    /**
-     * This function returns digit of given power.
-     * @param pow - power of digit to return.
-     * @param validate - Defines if to validate arguments.
-     * 
-     * **Default - _false_**
-     */
     digGen(...powers: number[]) {
         const digits: (string | undefined)[] = []
         for(let powIndex = 0; powIndex < powers.length; powIndex++) {

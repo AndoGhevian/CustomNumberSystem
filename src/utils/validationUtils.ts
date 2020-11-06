@@ -4,11 +4,11 @@ import Joi from "joi"
 /**
  * **NOT SAFE METHOD**
  * 
- * Validates and set defaults for function arguments.
+ * Set _Defaults_ and _Validates_ function arguments.
  * @param obj - object with function arguments to validate.
  * @param objSchema - contains as properties _defaultSetter_ and _niche_ schemas
  * to validate arguments with.
- * - defaultSetter - schema for providing defaults.
+ * - defaultSetter - schema for setting defaults.
  * - niche - schema to validate arguments more strictly if needed.
  * @param context - optional context to pass to validate function. See **_Joi_** context.
  */
@@ -41,6 +41,10 @@ export function validateArguments(obj: { [key: string]: any }, objSchema: {
 }
 
 
+/**
+ * Map of Joi Schemas, objects with default propertie values,
+ * or default primitive values, to keys, which **MUST** always succeed.
+ */
 interface DefaulsSchema {
     [key: string]: any | Joi.Schema | DefaulsSchema
 }
@@ -49,7 +53,8 @@ interface DefaulsSchema {
  * **NOT SAFE METHOD**
  * 
  * Generates Joi object schema to set defaults on appropriate object.
- * @param defaultsSchema - See DefaultsSchedefaultSetterterface description
+ * Result of this function can be used in _defaultSetter_ of _objSchema_. (See _validateArguments_ above)
+ * @param defaultsSchema - See _DefaultsSchema_ description
  */
 export function constructDefaultsSchema(defaultsSchema: DefaulsSchema) {
     const schema: { [key: string]: Joi.Schema } = {}

@@ -16,8 +16,7 @@ export const NumberSystemSchema = {
                     .items(
                         Joi.string()
                             .min(1)
-                    )
-                    .unique(),
+                    ),
                 SystemDigitsConfigSchema,
             )
             .required(),
@@ -46,10 +45,10 @@ export const decimalToDecDigitsArrSchema = {
     })
 }
 
-export const decDigitsArrToDecimalSchema = {
+export const powersArrToDecimalSchema = {
     defaultSetter: defaultsSchema.validateDefaults,
     niche: Joi.object({
-        digArray: Joi.array()
+        powers: Joi.array()
             .min(1)
             .items(
                 Joi.number()

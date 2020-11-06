@@ -6,45 +6,80 @@ import {
 
 
 /**
- * Represents new number system, with provided digits.
+ * Represents new _NumberSystem_ corresponding to provided digits,
+ * or _SystemDigitsConfig_
  */
 export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     /**
-     * Digits of current number system.
+     * Digits of current _NumberSystem_, or function
+     * which returns corresponding digit for given digit _power_.
      */
     readonly digits: T extends SystemDigitsConfig ? T['digGen'] : string[]
 
     /**
-     * Defines if _digits_ is a function which accept dinamic number _power_ of arguments.
+     * Defines if _digits_ is a function which supports
+     * multiple _power_ arguments.
      * 
-     * NOTE: _digits_ can be digits generator function,
-     * but can accept single argument of power to return digit for.
+     * NOTE: If _dinamicAritySystem_ is false,
+     * It does not necessary mean that _digits_ is not a function. 
      */
     readonly dinamicAritySystem: boolean
+    
     /**
-     * Base of Number System.
+     * Base of current _NumberSystem_.
      */
     readonly base: number
+    /**
+     * Defines if to memoize already calculated digit _powers_
+     * for numbers in current _NumberSystem_.
+     * 
+     * **Default - _"performanceOptimized"_, i.e. memoize.**
+     */
     readonly optimizationMode: OptimizaionMode
 
+    /**
+     * _JSBI_ instance of current _NumberSystem_ base.
+     */
     protected readonly baseBigInt: JSBI
 
+     /**
+     * _JSBI_ instance of number _ZERO_ - _0_.
+     */
     protected static readonly ZERO_BIG_INT = JSBI.BigInt(0)
+     /**
+     * _JSBI_ instance of number _ONE_ - _1_.
+     */
     protected static readonly ONE_BIG_INT = JSBI.BigInt(1)
 
+    /**
+     * Containes already calculated maximum numbers
+     * within ranks, maped to appropriate ranks releated
+     * to current _NumberSystem_.
+     */
     protected _maxRankMap: { [key: number]: NSNumber<T> } = {}
+    /**
+     * Containes already calculated minimum numbers
+     * within ranks, maped to appropriate ranks releated
+     * to current _NumberSystem_.
+     */
     protected _minRankMap: { [key: number]: NSNumber<T> } = {}
 
     /**
-     * @param digits - Digits of new number system with at least one element.
-     * Each must contain at least one character.
-     * 
-     * NOTE: Digits must be unique.
+     * @param digits - Digits array of new _NumberSystem_ with at least one element.
+     * where each _"Digit"_ contains at least one character,
+     * or _SystemDigitsConfig_ instance, which defines digits system.
+     * @param options - _NumberSystem_ configuration options.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
      */
     constructor(digits: T, options?: {
+        /**
+         * Defines if to memoize already calculated digit _powers_
+         * for numbers in current _NumberSystem_.
+         * 
+         * **Default - _"performanceOptimized"_, i.e. memoize.**
+         */
         optimization?: 'memoiryOptimized' | 'performanceOptimized'
     }, validate?: boolean) {
         const validArgs = validateArguments({ digits, options, validate }, NumberSystemSchema)
@@ -69,6 +104,19 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
         this.baseBigInt = JSBI.BigInt(this.base)
     }
 
+    /**
+     * **NOT VALIDATABLE!!!**
+     * 
+     * Returnes 'strict' _SystemDigitsConfig_ with _dinamicArity_. (See _SystemDigitsConfig_ for more details)
+     * @param mixture - Comma separated list of:
+     * - numbers: **MUST** be Unicode code point,
+     * - number ranges - [number, number]: **MUST** be Unicode code points range,
+     * - strings: **Must** contain at leats one character, **CAN** contain surrogate pairs.
+     * - char ranges - [char, char]: First cahracter will be taken
+     * if more than one character apeares in string. **CAN** contain surrogate pairs.
+     * Surrogate Paires considered as single characters.
+     * - _SystemDigitsConfig_
+     */
     static systemDigitsConfig(...mixture: ([number, number] | [string, string] | number | string | SystemDigitsConfig)[]): SystemDigitsConfig {
         type CategoryStructure = {
             currentBase: number
@@ -204,40 +252,42 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Converts digits array given in decimal system for number in  _base_ system
-     * to number in decimal system.
-     * @param digArray - Array of digits in decimal system representing _base_ system number.
-     * Digits must be less than given base.
-     * @param base - represents considered number( given with digits array ) system base.
+     * Converts _powers_ array of give _base_  to decimal number string representation.
+     * @param powers - _Powers_ array of given _base_. _Powers_ **MUST** be less than _base_ nonnegative integers.
+     * @param base - _Base_ in which to consider given _powers_ array.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
      */
-    static decDigitsArrToDecimal(digArray: number[], base: number, validate?: boolean) {
-        const validArgs = validateArguments({ digArray, base, validate }, decDigitsArrToDecimalSchema)
-        digArray = validArgs.digArray
+    static powersArrToDecimal(powers: number[], base: number, validate?: boolean) {
+        const validArgs = validateArguments({ powers, base, validate }, powersArrToDecimalSchema)
+        powers = validArgs.powers
         base = validArgs.base
 
         const baseBigInt = JSBI.BigInt(base)
         let sumBigInt = NumberSystem.ZERO_BIG_INT
-        for (const dig of digArray) {
-            const digBigInt = JSBI.BigInt(dig)
-            sumBigInt = JSBI.add(JSBI.multiply(sumBigInt, baseBigInt), digBigInt)
+        for (const pow of powers) {
+            const powBigInt = JSBI.BigInt(pow)
+            sumBigInt = JSBI.add(JSBI.multiply(sumBigInt, baseBigInt), powBigInt)
         }
         return sumBigInt.toString()
     }
 
     /**
-     * Generates _NSNumbers_  based on custom function,
-     * which must return number, string representation of number, or _NSNumber_ to add
-     * to last _NSNumber_ generated or null, to return from generator(to stop it).
-     * @param startNsNumber - _NSNumber_ to start generating values from.
-     * @param accumulator - Function which returns number, string representation of number, or _NSNumber_
-     * to increment last value with, or null to stop generator.
-     * @param optional - Optional arguments.
-     * For more details see each optional argument description.
+     * Generates _NSNumbers_  using custom _accumulator_ function,
+     * which must return decimal number, string( representation of decimal number ),
+     * or _NSNumber_ instance, to add to last _NSNumber_ generated, or null,
+     * to stop generation.
+     * @param startNsNumber - _NSNumber_ to start generating numbers from.
+     * @param accumulator - Function which returns decimal number,
+     * string( representation of decimal number ), or _NSNumber_ instance,
+     * to add to last generated number, or null, to stop generator. (See also _accumulator_ arguments.)
      * 
-     * **Default -  _See each propery default_**
+     * NOTE: In case when result of applying _accumulator_ to last number
+     * is negative, memoized number will be _NSNumber(0)_ and subsequent generated value will
+     * be calculated against it.
+     * @param optional - Optional configurations.
+     * For more details and defaults see each _optional_ property description.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -246,29 +296,38 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
         startNsNumber: NSNumber<any>,
         accumulator: (
             /**
-             * This argument will be or _NSNumber_, if after applying accumulator to last number result is positive,
-             * or will be _null_ if its not.
+             * If after applying _accumulator_ to last number result is positive:
+             * - This argument will be _NSNumber_ instance.
+             * - **else** will be _null_.
+             * 
+             * NOTE: If you not consider to use this argument,
+             * do not specify it in your function signature.
+             * It will be more performance optimal.
              */
             lastNsNumber?: NSNumber<any> | null,
             /**
-             * Decimal string representation of last number after applying to it accumulator
+             * Decimal string representation of result of applying
+             * _accumulator_ to last _NSNumber_ instance.
              * ( negative numbers will also be presented unlike first argument ).
+             * 
+             * NOTE: If you not consider to use this argument,
+             * do not specify it in your function signature.
+             * It will be more performance optimal.
              */
             lastNumberDecStr?: string,
         ) => number | string | NSNumber<any> | null,
         optional?: {
             /**
-             * Defines if to exclude start number when generating numbers.
+             * Defines if to exclude _startNsNumber_ when start generating numbers.
              * 
              * **Default - _false_**
              */
             excludeStart?: boolean,
             /**
-             * Defines if to return _null_ if result after applying accumulator to last number is negative.
-             * In this case memoized last number will be _NSNumber(0)_ and subsequent generated value will
-             * be calculated against it.
+             * Defines if to return _null_ if result after applying _accumulator_
+             * to last number is negative. 
              * 
-             * If _false_ provided then returned number will be _NSNumber(0)_.
+             * If _false_ provided then _NSNumber(0)_ will be returned.
              * 
              * **Default - _true_**
              */
@@ -346,41 +405,40 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
 
     /**
      * Monotonic _NSNumbers_ sequence generator.
-     * @param startNsNumber - _NSNumber_ to start generating values from.
-     * @param optional - Optional arguments.
-     * For more details see each optional argument description.
-     * 
-     * **Default -  _See each property default_**
+     * @param startNsNumber - _NSNumber_ to start generating numbers from.
+     * @param optional - Optional configurations.
+     * For more details and defaults see each _optional_ property description.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
      */
     nsNumberGenerator(startNsNumber: NSNumber<any>, optional?: {
         /**
-         * End number represented with _NSNumber_.
+         * _NSNumber_ to finish generate numbers on.
          * 
          * **Default _undefined_ - It Means Generator will continue monotonously
-         * generate _NSNumbers_, and pause only if zero reached.**
+         * generate _NSNumbers_, and pause only if _NSNumber(0)_ reached.**
          * 
-         * **So if its monotonously inceressing generator,**
-         * **it will never stop.**
+         * **So if its monotonously increasing generator, it will never stop.**
          */
         endNsNumber?: NSNumber<any>,
         /**
-         * Accumulator given in number, string representation of number, or _NSNumber_.
-         * Must be nonzero integer or its representation.
+         * Accumulator given in decimal number, string( representation of decimal number ),
+         * or _NSNumber_ instance.
+         * 
+         * **MUST** be nonzero integer, or its string representation.
          * 
          * **Default - _1_**
          */
         accumulator?: number | string | NSNumber<any>,
         /**
-             * Defines if to exclude start number when generating numbers.
-             * 
-             * **Default - _false_**
-             */
+         * Defines if to exclude _startNsNumber_ when start generating numbers.
+         * 
+         * **Default - _false_**
+         */
         excludeStart?: boolean,
         /**
-         * Defines if to exclude end number when reached generating numbers.
+         * Defines if to exclude _endNsNumber_ if reached.
          * 
          * **Default - _false_**
          */
@@ -466,9 +524,9 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Returns _NSNumber_ object in current _NumberSystem_.
-     * @param number - number, string( representation of number ), _NSNumber_ object, **OR**
-     * Array of decimal digits in current _NumberSystem_.
+     * Returns _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string( representation of decimal number ),
+     * _NSNumber_ instance, or array of digit powers, in current _NumberSystem_.
      * 
      * **Default -**
      * - **If empty array provided  - _[0]_**
@@ -490,8 +548,8 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Generates maximum number of _NumberSystem_ in given rank.
-     * @param rank - rank of number to generate.
+     * Generates maximum number of _NumberSystem_ within given _rank_.
+     * @param rank - rank of number to generate. **MUST** be positive integer.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -516,8 +574,8 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Generates minimum number of _NumberSystem_ in given rank.
-     * @param rank - rank of number to generate.
+     * Generates minimum number of _NumberSystem_ within given _rank_.
+     * @param rank - rank of number to generate. **MUST** be positive integer.
      * @param validate - Defines if to validate arguments.
      * 
      * **Default - _false_**
@@ -552,7 +610,7 @@ import { NSNumber } from "../NSNumber"
 import { validateArguments } from "../utils"
 import {
     NumberSystemSchema,
-    decDigitsArrToDecimalSchema,
+    powersArrToDecimalSchema,
     NumberSchema,
     nsNumberManualGeneratorSchema,
     nsNumberGeneratorSchema,
