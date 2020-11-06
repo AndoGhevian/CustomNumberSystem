@@ -395,19 +395,18 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
                     if (!excludeEndPosition) {
                         yield pos < digitsArr.length ? digitsArr[pos] : null
                     }
-                    return
                 }
 
-                if (endPosition !== undefined) {
-                    while (pos < endPosition) {
-                        yield null
-                        pos += accumulator
-                    }
+                // if (endPosition !== undefined) {
+                //     while (pos < endPosition) {
+                //         yield null
+                //         pos += accumulator
+                //     }
 
-                    if (pos === endPosition && !excludeEndPosition) {
-                        yield null
-                    }
-                }
+                //     if (pos === endPosition && !excludeEndPosition) {
+                //         yield null
+                //     }
+                // }
             }
             // ___________GeneratorEnd___________
         }
@@ -927,7 +926,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
         if (typeof this.ns.digits === 'function') {
             const digGen = this.ns.digits as (...powers: number[]) => (string | undefined)[]
             for (const dig of iterable) {
-                const charMassive = digGen(dig as number)
+                const charMassive = digGen.call(this, dig as number)
                 numStr += charMassive[0]
             }
             return numStr
