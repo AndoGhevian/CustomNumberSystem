@@ -301,9 +301,14 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
          * 
          * **MUST** be nonnegative integer.
          * 
-         * NOTE: If _startPosition_ out of digits posions range
-         * and it is monotonously increasing generator, i.e. accumulator > 0,
-         * then after considering _startPosition_, generator will immediately stop.
+         * NOTE:
+         * - If _startPosition_ out of digits positons range
+         *  **And** it is monotonously increasing generator, i.e. accumulator > 0
+         *  - then, after considering _startPosition_, generator will immediately stop.
+         * - Else it will continue generate _powers_ for existing positions and 
+         *  **"nulls"** for non existing ones, until _endPosition_ reached,
+         * If its not reachable, after considering _startPosition_,
+         * generator will immediately stop.
          * 
          * **Default _0_**
          */
@@ -315,6 +320,8 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
          * 
          * **Default _undefined_ - It Means Generator will continue monotonously
          * generate powers until last reachable _edge position_ reached(0 or _Last Digit Position_).**
+         * 
+         * NOTE: See **startPosition** description for full algorithm.
          */
         endPosition?: number,
         /**
@@ -332,7 +339,7 @@ export class NSNumber<T extends string[] | SystemDigitsConfig> {
          */
         excludeStartPosition?: boolean,
         /**
-         * Defines if to exclude digit on _endPosition_ if reached.
+         * Defines if to exclude _endPosition_ power if reached.
          * 
          * **Default - _false_**
          */

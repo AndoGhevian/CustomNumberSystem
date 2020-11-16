@@ -6,19 +6,22 @@ import {
 
 
 /**
- * Represents new _NumberSystem_ corresponding to provided digits,
- * or _SystemDigitsConfig_
+ * Represents new _NumberSystem_ corresponding to provided digits array,
+ * or _SystemDigitsConfig_.
  */
 export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     /**
-     * Digits of current _NumberSystem_, or function
+     * Digits array of current _NumberSystem_, or function
      * which returns corresponding digit for given digit _power_.
      */
     readonly digits: T extends SystemDigitsConfig ? T['digGen'] : string[]
 
     /**
      * Defines if _digits_ is a function which supports
-     * multiple _power_ arguments.
+     * multiple _power_ arguments. 
+     * 
+     * For Detailed description
+     * of this property See - **SystemDigitsConfig**
      * 
      * NOTE: If _dinamicAritySystem_ is false,
      * It does not necessary mean that _digits_ is not a function. 
@@ -65,8 +68,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     protected _minRankMap: { [key: number]: NSNumber<T> } = {}
 
     /**
-     * @param digits - Digits array of new _NumberSystem_ with at least one element.
-     * where each _"Digit"_ contains at least one character,
+     * @param digits - Digits array of new _NumberSystem_ with at least one element,
      * or _SystemDigitsConfig_ instance, which defines digits system.
      * @param options - _NumberSystem_ configuration options.
      * @param validate - Defines if to validate arguments.
@@ -253,7 +255,8 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
 
     /**
      * Converts _powers_ array of give _base_  to decimal number string representation.
-     * @param powers - _Powers_ array of given _base_. _Powers_ **MUST** be less than _base_ nonnegative integers.
+     * @param powers - _Powers_ array of given _base_. _Powers_ **MUST** be array of
+     * nonnegative integers less than _base_.
      * @param base - _Base_ in which to consider given _powers_ array.
      * @param validate - Defines if to validate arguments.
      * 
@@ -282,10 +285,12 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
      * @param accumulator - Function which returns decimal number,
      * string( representation of decimal number ), or _NSNumber_ instance,
      * to add to last generated number, or null, to stop generator. (See also _accumulator_ arguments.)
+     * Accumulator **Must** be function with explicit arguments, because **function.length** used under the hood.
      * 
      * NOTE: In case when result of applying _accumulator_ to last number
      * is negative, memoized number will be _NSNumber(0)_ and subsequent generated value will
      * be calculated against it.
+     * 
      * @param optional - Optional configurations.
      * For more details and defaults see each _optional_ property description.
      * @param validate - Defines if to validate arguments.
@@ -296,17 +301,13 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
         startNsNumber: NSNumber<any>,
         accumulator: (
             /**
-             * If after applying _accumulator_ to last number result is positive:
+             * If after applying _accumulator_ to last number, result is nonnegative:
              * - This argument will be _NSNumber_ instance.
              * - **else** will be _null_.
-             * 
-             * NOTE: If you not consider to use this argument,
-             * do not specify it in your function signature.
-             * It will be more performance optimal.
              */
             lastNsNumber?: NSNumber<any> | null,
             /**
-             * Decimal string representation of result of applying
+             * Decimal string representation of result, of applying
              * _accumulator_ to last _NSNumber_ instance.
              * ( negative numbers will also be presented unlike first argument ).
              * 
@@ -324,7 +325,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
              */
             excludeStart?: boolean,
             /**
-             * Defines if to return _null_ if result after applying _accumulator_
+             * Defines if to yield _null_ if result after applying _accumulator_
              * to last number is negative. 
              * 
              * If _false_ provided then _NSNumber(0)_ will be returned.
@@ -406,6 +407,9 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     /**
      * Monotonic _NSNumbers_ sequence generator.
      * @param startNsNumber - _NSNumber_ to start generating numbers from.
+     * 
+     * NOTE: If with given _accumulator_ provided _endNsNumber_ is not reachable,
+     * then after considering _startNsNumber_ generator will immediately stop.
      * @param optional - Optional configurations.
      * For more details and defaults see each _optional_ property description.
      * @param validate - Defines if to validate arguments.
@@ -426,7 +430,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
          * Accumulator given in decimal number, string( representation of decimal number ),
          * or _NSNumber_ instance.
          * 
-         * **MUST** be nonzero integer, or its string representation.
+         * If not _NSNumber_ instance, then **MUST** be nonzero integer, or its string representation.
          * 
          * **Default - _1_**
          */
@@ -548,7 +552,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Generates maximum number of _NumberSystem_ within given _rank_.
+     * Generates maximum _NSNumber_ of _NumberSystem_ within given _rank_.
      * @param rank - rank of number to generate. **MUST** be positive integer.
      * @param validate - Defines if to validate arguments.
      * 
@@ -574,7 +578,7 @@ export class NumberSystem<T extends string[] | SystemDigitsConfig> {
     }
 
     /**
-     * Generates minimum number of _NumberSystem_ within given _rank_.
+     * Generates minimum _NSNumber_ of _NumberSystem_ within given _rank_.
      * @param rank - rank of number to generate. **MUST** be positive integer.
      * @param validate - Defines if to validate arguments.
      * 
