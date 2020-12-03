@@ -1,178 +1,206 @@
 # CustomNumberSystem
-**V1.1.0 BREAKING CHANGIS MADE, THIS README RELEATED TO V1.0.0, CONSIDER TO USE LSAT VERSION!!!**
+**V3.0.0**
 
 **With This You can flexibly generate strings also**
 
 Welcome to _Customizable Number Systems_ world. You will able to customize your system characters.
-Easily make Transitions and Generate Numbers of any System. By the way this library referres only to **nonnegative integers**.
+Easily make Transitions and Generate Numbers of any System. By the way, this library referres only to **nonnegative integers**.
 
 
 Ok, Lets See if it meets your requirements.
 
 ## Usage
-Lets say we want to work with **nonnegative integer** numbers in given character system:
-`['a', 'b', 'c']`, well:) Lets create appropriate system:
+Lets create NumberSystem with digits `['a', 'b', 'c']`, (power of each digit equal to its index in array):
 ``` javascript
-const sys3 = new NumberSystem([
-    'a', 'b', 'c'
-], {}, true)
+const { NumberSystem } = require('custom-number-system')
+
+const sys3 = new NumberSystem(['a', 'b', 'c'])
 ```
-You may ask, ok, first argument is obviously number system characters array,
-but what do second and third arguments mean?
-
-Well, final argument of all functions( constructors also ) of library
-that expect arguments define if to make runtime validations of all previous arguments. So if function expects arguments, their count at least 2, where final is **validate** argument.
-
-What about second argument in **NumberSystem** constructor function. Second argument define some configuration options. Currently theres only one property **options.optimization** which will take one of values:
-``` typescript
-type OptimizaionMode = 'memoiryOptimized' | 'performanceOptimized'
-```
-Wee will talk about them later. Now only remember that default value for this option is `performanceOptimized`
-
-Lets continue on our created **sys3** Number System.
-
-In this number system you can create numbers as big as you wish.
+In this NumberSystem you can create numbers as big as you wish.
 e.g.
 ``` javascript
-const nsNumber1 = sys3.Number(1234)
-const nsNumber2 = sys3.Number('123456789123456789123456789123456789123456789')
+const num1 = sys3(1234)
+const num2 = sys3('123456789123456789123456789123456789123456789')
 ```
-Remember that whan you create numbers in current Number System by providing
-_js_ number or string representation of number, they will be considered in **decimal** notation.
+Remember that whan you create numbers in current NumberSystem by providing number
+or string representation of number, they will be considered in **decimal** notation.
 
-You can create number by providing valid digits array, where digits are represented by their **powers** in current system and not by their srting representations, i.e. if your system **base** is 3 as in this example, then **maximum power**( bigest digit power ) is **2** and **minimum power**( minimum digit power ) is **0**.
-
-In our example **maximum power 2** corresponds to **'c'** and **minimum power 0** correspondes to **'a'**.
+You can create NSNumber by providing valid powers array, where powers represented by numbers in range **[0, system.base - 1]**.
 ``` javascript
-const nsNumber = sys3.Number([ 2, 2, 1, 0, 0 ])
-
+const num = sys3([ 2, 2, 1, 0, 0 ])
 ```
 
 Or you can simply convert number from one system to another:
 ``` javascript
-const sys2 = new NumberSystem([
-        'O', 'L'
-    ])
-const sys2Num = sys2.Number(9) // 1001 - in binary system.
-const sys3Num = sys3.Number(sys2Num) // converting...
+const sys2 = new NumberSystem(['O', 'L'])
+
+const num = sys2(9) // 1001 - in binary system.
+const converted = num.toSystem(sys3) // converting...
 ```
-Here **power** of **'L'** is **1**, and **power** of **'O'** is **0**.
 
-> NOTE: You cant create Number System of base less than 2.
+You cant create NumberSystem of base less than 2.
 
-After you create numbers( by the way wee were call them **nsNumbers** in **tsDocs** ), you can manipulate them as you want.
+After you create numbers you can manipulate them as you wish.
 ``` javascript
-const sys4 = new NumberSystem([
-        'C', 'G', 'P', 'W'
-    ])
-const sys4Num = sys4.add(sys2Num, sys3Num)
+const sys4 = new NumberSystem(['C', 'G', 'P', 'W'])
+
+const sum = nsNumber.add(num) // Sum will be NSNUmber in sys4 system.
 ```
-As you see above, you can add numbers of two different number systems and retrive result in system, against which you call operation. In this case wee call **add** operation on **sys4**, so we get result in **sys4** Number System regardless of operands systems.
-You can also calculate:
-``` javascript
-const multiply = sys4.multiply(sys2Num, sys3Num) // sys2Num * sys3Num
 
-// If (sys2Num < sys3Num) result will be sys4.Number(0)
-const divide = sys4.divide(sys2Num, sys3Num) // sys2Num / sys3Num
-
-const remainder = sys4.remainder(sys2Num, sys3Num) // sys2Num % sys3Num
-
-// if (sys2Num < sys3Num) null will be returned.
-const subtract = sys4.subtract(sys2Num, sys3Num) // sys2Num - sys3Num
-```
+You can find all arithmetical operations on NSNumber instance.
 > NOTE: 
-> - When using **subtract** method, If _firstArgument_ less than _secondArgument_, result will be **null**.
-> - When using **divide** method, If _firstArgument_ less than _secondArgument_, result will be **sys.Number(0)**, where **sys** is Number System on which **divide method** called.
+> - When using **subtract** method, If NSNumber less than _ArgumentNsNumber_, result will be **undefined**.
+> - When using **divide** method, If NSNumber less than _ArgumentNsNumber_, result will be **NSNumber.system(0)**.
 
-You can also compare numbers.
+You can also compare NSNumbers with static methods of NumberSystem.
 ``` javascript
-const numMax = sys2.Number(10)
-const numMin = sys3.Number(4)
-const numMid = sys4.Number(7)
-
-const numMid3 = sys3.Number(numMid) // numMid converted from sys4 to sys3
-
-sys.lessThan(numMin, numMax) === true
-sys.equal(numMid, numMid3) === true
-sys.lessThanOrEqual(numMid, numMid3) === true
-sys.lessThanOrEqual(numMid, numMax) === true
-```
-
-Ok, now what you can do with this numbers?
-First of all you can count their digits in Number System you create them.
-``` javascript
-const nsNumber = sys2.Number(11) // 1011 - in binary format.
-nsNumber.countDigits() === 4 // 4 digits in binary system.
+NumberSystem.lt(num1, num2) // less than
+NumberSystem.le(num1, num2) // less than or equal
+NumberSystem.gt(num1, num2) // greater than
+NumberSystem.ge(num1, num2) // greater than or equal
+NumberSystem.ne(num1, num2) // not equal
+NumberSystem.e(num1, num2) // equal
 ```
 You can get **power** of digit at appropriate index **( 0 based )** read from left.
 ``` javascript
-nsNumber.getDigit(0) === 1
-nsNumber.getDigit(1) === 0
-nsNumber.getDigit(2) === 1
-nsNumber.getDigit(3) === 1
+const num = sys3([ 2, 2, 1, 0, 0 ])
+
+num.getPower(0) === 2
+num.getPower(1) === 2
+num.getPower(2) === 1
+num.getPower(3) === 0
+num.getPower(4) === 0
 ```
 
-You can construct generater of **digit powers** for current number:
+Get generater of **digit powers** for current NSNumber:
 ``` javascript
-const digPowGen = nsNumber.decDigitsGenerator()
-for(const digPow of digPowGen) {
-    console.log(digPow)
-}
-// Will be printed for sys2.Number(11), which is 1011 in binary powers:
-// 1
-// 0
-// 1
-// 1
-```
-Or you can give **optional** arguments:
-``` javascript
-const digPowGen = nsNumber.decDigitsGenerator({
-    startPosition: 1, // default 0
-     // By default: _not provided_.
-     // i.e. will continue until last reachable digit.
-    endPosition: 3,
-    accumulator: 1 // default 1
-    excludeStartPosition: false, // default false
-    excludeEndPosition: false, // default false
-})
-for(const digPow of digPowGen) {
-    console.log(digPow)
+const start = 0
+const end = num.digitsCount - 1
+const step = 1
+
+const powGen = num.digPowGenerator(start, end, step)
+for(const pow of powGen) {
+    console.log(pow)
 }
 // Will be printed:
+// 2
+// 2
+// 1
 // 0
-// 1
-// 1
+// 0
 ```
-You can use **excludeStartPosition** and **excludeEndPosition** to omit
-**start** or **end** digit. **End** means that position reached after applying **accumulator** to **startPosition** finite number of times.
-So if after latest accumulator application result position is not equal to **endPosition**, digit at position before, will not be omited as **end**.
+> NOTE: 
+> - If start or end less than **0**, then **0** will be 
+used accordingly for start or end.
+> - If start or end more than **num.digitsCount - 1**, then **num.digitsCount - 1** will be used accordingly for start or end.
+> - If step less or equal than **0** then **1** will be used as step.
 
-You can use any **nonnegative integer** as **accumulator** value.
-
-If provided **startPosition** is _greaterOrEqual_ than actual digits count, and it is **monotonously increasing** sequence **( accumulator > 1 )** then as start will be returned **null**, and generator will be stoped. In case of **monotonously decresing** sequence generator will continue until **endPosition** and if digit is not exists, it will return **null** for each.
-
-If provided **startPosition** is _less_ than actual digits count, then until **endPosition** generator will return digits or **null** if they not exists in positions.
-
-You can get string representation of current number.( In its Number System )
+You can get Generator of NSNumbers of NumberSystem instance.
 ``` javascript
-const sys2 = new NumberSystem([
-        'O', 'L'
-    ])
-const nsNumber = sys2.Number(11) // 1011 - in binary format.
-console.log(nsNumber.toString())
-// will be printed:
-// LOLL
+const sys2 = new NumberSystem(['0', '1'])
+const sys3 = new NumberSystem(['a', 'b', 'c'])
+
+const start = sys2(10)
+const end = sys3(100)
+const step = sys2(1)
+
+const numGen = sys3.nsNumberGenerator(start, end, step)
+
+for(const num3 of numGen) {
+    console.log(num3.toString())
+}
 ```
 
-You can also generate Numbers in current Number System:
-``` javascript
-// In this case generator will work infinitly until you break.
-const infiniteGenerator = sys.nsNumberGenerator(sys.Number(10))
+You can get minimum or maximum NSNumbers in rank:
+```javascript
+const sys3 = new NumberSystem(['0', '1', '3'])
 
-const nsNumGen = sys4.nsNumberGenerator(sys2.Number(10), {
-    endNsNumber: sys3.Number(99)
-})
+console.log(sys3.minInRank(3).toString()) // 100
+console.log(sys3.maxInRank(3).toString()) // 333
 ```
-You can use options, they are behave same as digits generator options, although theres no **null** returnes, i.e. If you reached the only limit of not beeing negative, generator will stop.
+> NOTE: 
+> - If rank is less than **1**, then **1** will be used as rank.
 
-**_To be continued..._**
+Now note that **NSNumbers** are instances of only their **constructor NumberSystemInstances**, and **NumberSystemInstances** are instances of **NumberSystem**.
+```javascript
+const sys2 = new NumberSystem(['0', '1'])
+const num2 = sys2(1)
+
+const sys3 = new NumberSystem(['a', 'b', 'c'])
+const num3 = sys3(1)
+
+console.log(num2 instanceof sys2) // true
+console.log(num3 instanceof sys3) // true
+console.log(num2 instanceof sys3) // false
+
+console.log(sys2 instanceof NumberSystem) // true
+console.log(sys3 instanceof NumberSystem) // true
+```
+
+You can check if some value is NSNumber.
+```javascript
+const { isNsNumber } = require('custom-number-system')
+
+console.log(isNsNumber(num2)) // true
+```
+
+## Advanced
+You can use instead of digits array, an object that implements _IDigitsConfig_:
+```javascript
+interface IDigitsConfig {
+    base: number,
+    readonly maxBase: number
+    digGen: (this: IDigitsConfig, ...powers: number[]) => (string | undefined)[],
+    readonly dinamicArity?: boolean,
+}
+```
+Here digGen is binded to current object. It's must guarantee
+that it will return digit for all **powers** from **0** to **maxBase**.
+
+The only modifiable property is **base**.
+You can change **base** between **2** and **maxBase**,
+when you pass config to NumberSystem constructor, **base** will be fixed, 
+and only digits in range **[0, base]** will be used.
+
+Interface also define that powers not in range **[0, maxBase]** must return
+**undefineds**.
+
+**dinamicArity** defines if you can pass multiple powers to **digGen**.
+> NOTE: **digGen** always return an array of digits.
+
+**Example 1** is CharGroup constructor which will
+give you **digitsConfig** of visible characters:
+```javascript
+const { CharGroup } = require('custom-number-system')
+
+const charGroup = CharGroup('ab$cd🌐')
+
+console.log(
+    charGroup.maxBase,
+    charGroup.digGen(-1, 0,1,2,3,4,5,6)
+)
+// Will be printed:
+// 6, [ undefined, 'a', 'b', '$', 'c', 'd', '🌐', undefined ]
+```
+
+**Example 2** is digitsConfigMixer utility function:
+```javascript
+const { digitsConfigMixer } = require('custom-number-system')
+
+const digitsConfig = digitsConfigMixer([97,122], ['A', 'Z'], 'Blablabla', 97, CharGroup('ab$cde🌐'))
+```
+This digitsConfig includes(starting from power 0) symbols:
+- **[97, 122]**: from **'a'** to **'z'**
+- **['A', 'Z']**: then from **'A'** to **'Z'**
+- **'Blablabla'**: word **'Blablabla'**
+- **97**: symbol **'a'**
+- **CharGroup('ab$cde🌐')**: symbols **'a', 'b', '$', 'c', 'd', '🌐'**
+
+And you can check if object correctly implements IDigitsConfig interface:
+```javascript
+const { isDigitsConfig } = require('custom-number-system')
+
+console.log(isDigitsConfig(digitsConfig)) // true
+```
+
+All this can also be found in TsDocs.

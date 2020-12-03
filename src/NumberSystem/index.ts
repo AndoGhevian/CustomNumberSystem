@@ -584,7 +584,7 @@ const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstruc
         maxInRank: {
             value: function (this: NumberSystemPrivate<any>, rank: number) {
                 if (rank <= 0) {
-                    return undefined
+                    rank = 1
                 }
                 if (!(rank in this._maxInRankMap)) {
                     const powArr: number[] = []
@@ -601,7 +601,7 @@ const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstruc
         minInRank: {
             value: function (this: NumberSystemPrivate<any>, rank: number) {
                 if (rank <= 0) {
-                    return undefined
+                    rank = 1
                 }
                 if (!(rank in this._minInRankMap)) {
                     const powArr: number[] = [1]

@@ -13,9 +13,16 @@
   },
   "keywords": [
     "ns",
-    "number",
+    "NumberSystem",
+    "DigitsGenerator",
+    "NumberGenerator",
+    "numbers",
+    "system",
     "custom",
-    "generator"
+    "generator",
+    "digits",
+    "surrogate pairs",
+    "number base"
   ],
   "author": "Ando",
   "repository": {

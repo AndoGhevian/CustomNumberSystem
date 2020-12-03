@@ -18,7 +18,7 @@ export interface IDigitsConfig {
      * 
      * NOTE: If _dinamicArity_ is _falsey_, only single argument garanteed to be supported.
      */
-    digGen: (...powers: number[]) => (string | undefined)[],
+    digGen: (this: IDigitsConfig, ...powers: number[]) => (string | undefined)[],
     /**
      * Defines if _digGen_ method supports multiple _power_ arguments.
      */

@@ -13,5 +13,10 @@ export {
 export { default as NumberSystem } from './NumberSystem'
 
 export {
+    digitsConfigMixer,
+    isDigitsConfig,
+} from './utils'
+
+export {
     IDigitsConfig,
 } from './commonTypes'
