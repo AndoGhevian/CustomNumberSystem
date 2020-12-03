@@ -27,7 +27,7 @@ export interface CharGroupConstructor {
 
 
 
-const CharGroup: CharGroupConstructor = (function (): CharGroupConstructor {
+export const CharGroup: CharGroupConstructor = (function (): CharGroupConstructor {
     const CharGroup = function (this: CharGroupPrivate, chars: string) {
         if (!new.target) return new (CharGroup as any)(chars)
 
@@ -55,5 +55,3 @@ const CharGroup: CharGroupConstructor = (function (): CharGroupConstructor {
     })
     return CharGroup
 })()
-
-export default CharGroup

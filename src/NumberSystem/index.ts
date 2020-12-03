@@ -281,7 +281,7 @@ export interface NumberSystemConstructorPrivate extends NumberSystemConstructor 
 
 
 
-const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstructor {
+export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstructor {
     const NumberSystem: NumberSystemConstructorPrivate = function <T extends IDigitsConfig | string[]>(this: NumberSystemPrivate<T>, digits: T) {
         if (!new.target) return new (NumberSystem as any)(digits)
 
@@ -655,5 +655,3 @@ const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstruc
 
     return NumberSystem
 })()
-
-export default NumberSystem

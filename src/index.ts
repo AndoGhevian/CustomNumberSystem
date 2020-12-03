@@ -1,7 +1,7 @@
-export { default as CharGroup } from './CharGroup'
 export {
     CharGroupInstance,
     CharGroupConstructor,
+    CharGroup,
 } from './CharGroup'
 
 export {
@@ -9,8 +9,8 @@ export {
     NSNumber,
     NumberSystemInstance,
     NumberSystemConstructor,
+    NumberSystem,
 } from './NumberSystem'
-export { default as NumberSystem } from './NumberSystem'
 
 export {
     digitsConfigMixer,
