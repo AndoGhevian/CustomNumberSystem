@@ -1,10 +1,38 @@
-export * from './commonTypes'
-export * from './CharGroup'
-export * from './NSNumber'
-export * from './NumberSystem'
+export { default as CharGroup } from './CharGroup'
+export {
+    CharGroupInstance,
+    CharGroupConstructor,
+} from './CharGroup'
+
+export {
+    isNsNumber,
+    NSNumberInstance,
+    NumberSystemInstance,
+    NumberSystemConstructor,
+} from './NumberSystem'
+
+export {
+    IDigitsConfig,
+} from './commonTypes'
+
+
+import NumberSystem, { isNsNumber } from './NumberSystem'
+const sys = new NumberSystem(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+
+const num = sys(`173`)
+console.log(
+    isNsNumber([])
+)
+
+// for (const pow of num.digPowGenerator(8, 1, 2)) {
+//     console.log(pow)
+// }
+
+
+// export * from './NSNumber'
 
 // import { CharGroup } from './CharGroup'
-// import { SystemDigitsConfig } from './commonTypes'
+// import { IDigitsConfig } from './commonTypes'
 // import { NSNumber } from './NSNumber'
 // import { NumberSystem } from './NumberSystem'
 
