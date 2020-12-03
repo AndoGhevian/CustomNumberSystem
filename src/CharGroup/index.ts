@@ -1,6 +1,4 @@
-import {
-    IDigitsConfig,
-} from "../commonTypes"
+import { IDigitsConfig } from "../commonTypes"
 
 
 export interface CharGroupInstance extends IDigitsConfig { }
@@ -30,7 +28,7 @@ export interface CharGroupConstructor {
 
 
 const CharGroup: CharGroupConstructor = (function (): CharGroupConstructor {
-    const CharGroup = function(this: CharGroupPrivate, chars: string) {
+    const CharGroup = function (this: CharGroupPrivate, chars: string) {
         if (!new.target) return new (CharGroup as any)(chars)
 
         if (typeof chars !== 'string') chars = ''

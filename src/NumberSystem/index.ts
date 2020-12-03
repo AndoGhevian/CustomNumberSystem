@@ -9,7 +9,11 @@ import {
 } from "../commonTypes"
 
 
-export function isNsNumber(obj: any): obj is NSNumberInstance<NumberSystemInstance<IDigitsConfig | string[]>> {
+/**
+ * Checks if provided object is _NSNumber_ instance.
+ * @param obj - Object to check if it is _NSNumber_ instance.
+ */
+export function isNsNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>> {
     if (obj instanceof Object
         && Object.getPrototypeOf(obj).constructor
         && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
@@ -18,22 +22,87 @@ export function isNsNumber(obj: any): obj is NSNumberInstance<NumberSystemInstan
     return false
 }
 
-export interface NSNumberInstance<S extends NumberSystemInstance<any>> {
+/**
+ * _NSNumber_ instance.
+ */
+export interface NSNumber<S extends NumberSystemInstance<any>> {
+    /**
+     * _NumberSystem_ instance in which represented current _NSNumber_.
+     */
     readonly system: S
+    /**
+     * _NSNumber_ digits count.
+     */
     readonly digitsCount: number
-    digPowGenerator(start: number, end: number, step?: number): Generator<number | undefined>
+    /**
+     * 
+     * **NOTE: If _start_ or _end_ value is out of bounds  [0, NSNumber.digitsCount - 1]**
+     * **They will be assigned to 0(if less than 0)**
+     * **or NSNumber.digitsCount - 1(if more than NSNumber.digitsCount - 1) accordingly.**
+     * @param start - Generation start index(0 based). **MUST** be integer.
+     * @param end - Generation end index. **MUST** be integer.
+     * @param step - Generation step. **MUST** be positive integer.
+     */
+    digPowGenerator(start: number, end: number, step?: number): Generator<number>
+    /**
+     * Returns power of digit at give position of current number, or _undefined_ if not existing digit position provided.
+     * @param position - Index of digit to return power for.
+     * 
+     * **MUST** be integer.
+     */
     getPower(position: number): number
 
-    add(nsNumber: NSNumberInstance<any>): NSNumberInstance<S>
-    subtract(nsNumber: NSNumberInstance<any>): NSNumberInstance<S> | undefined
-    remainder(nsNumber: NSNumberInstance<any>): NSNumberInstance<S>
-    multiply(nsNumber: NSNumberInstance<any>): NSNumberInstance<S>
-    divide(nsNumber: NSNumberInstance<any>): NSNumberInstance<S>
+    /**
+     * Adds two _NSNumber_ instances.
+     * 
+     * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * @param nsNumber - _NSNumber_ to add.
+     */
+    add(nsNumber: NSNumber<any>): NSNumber<S>
+    /**
+     * Subtract two _NSNumber_ instances.
+     * 
+     * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * 
+     * **NOTE: If result less than zero, _undefined_ will be returned.**
+     * @param nsNumber - _NSNumber_ reducer.
+     */
+    subtract(nsNumber: NSNumber<any>): NSNumber<S> | undefined
+    /**
+     * Calculates _**CurrentNSNumebr** modulo **ArgumentNSNumber**_.
+     * 
+     * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * @param nsNumber - _NSNumber_ divider.
+     */
+    remainder(nsNumber: NSNumber<any>): NSNumber<S>
+    /**
+     * Multiply two _NSNumber_ instances.
+     * 
+     * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * @param nsNumber - _NSNumber_ multipler.
+     */
+    multiply(nsNumber: NSNumber<any>): NSNumber<S>
+    /**
+     * Divide two _NSNumber_ instances.
+     * 
+     * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * 
+     * **NOTE: Integer part of division will be taken.**
+     * @param nsNumber - _NSNumber_ divider.
+     */
+    divide(nsNumber: NSNumber<any>): NSNumber<S>
 
+    /**
+     * Returns string representation of current _NSNumber_.
+     */
     toString(): string
-    toSystem<T extends IDigitsConfig | string[]>(sys: NumberSystemInstance<T>): NSNumberInstance<NumberSystemInstance<T>>
+    /**
+     * Converts current _NSNumber_ to given _NumberSystem_ instance.
+     * @param sys - _NumberSystem_ instance to convert to.
+     */
+    toSystem<T extends IDigitsConfig | string[]>(sys: NumberSystemInstance<T>): NSNumber<NumberSystemInstance<T>>
 }
-export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NSNumberInstance<S> {
+export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NSNumber<S> {
     system: S
     bigInt: JSBI
     _digitsCount: number
@@ -45,39 +114,167 @@ export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NS
 }
 
 
+
+/**
+ * _NumberSystem_ instance.
+ */
 export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
+    /**
+     * Digits array or _IDigitsConfig_ of current _NumberSystem_,
+     */
     readonly digits: T
+    /**
+     * Base of current _NumberSystem_. When digits providing with
+     * _IDigitsConfig_, base will be fixed in this property.
+     */
     readonly base: number
 
-    nsNumberGenerator(start: NSNumberInstance<any>, end: NSNumberInstance<any>, step?: NSNumberInstance<any>): NSNumberInstance<NumberSystemInstance<T>>
-    maxInRank(rank: number): NSNumberInstance<NumberSystemInstance<T>>
-    minInRank(rank: number): NSNumberInstance<NumberSystemInstance<T>>
+    /**
+     * Monotonic _NSNumbers_ sequence generator. 
+     * 
+     * **NOTE:** _start_ and _end_ included.
+     * @param start - _NSNumber_ to start generation from.
+     * @param end - _NSNumber_ to finish generation on.
+     * @param step - _NSNumber_ representing step of generation.
+     * 
+     * **Default: 1**
+     */
+    nsNumberGenerator(start: NSNumber<any>, end: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Generates maximum _NSNumber_ of current _NumberSystem_ within given _rank_.
+     * @param rank - rank of number to generate. **MUST** be positive integer.
+     */
+    maxInRank(rank: number): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Generates minimum _NSNumber_ of current _NumberSystem_ within given _rank_.
+     * @param rank - rank of number to generate. **MUST** be positive integer.
+     */
+    minInRank(rank: number): NSNumber<NumberSystemInstance<T>>
 
-    (number: number): NSNumberInstance<NumberSystemInstance<T>>
-    (number: string): NSNumberInstance<NumberSystemInstance<T>>
-    (number: number[]): NSNumberInstance<NumberSystemInstance<T>>
-    new(number: number): NSNumberInstance<NumberSystemInstance<T>>
-    new(number: string): NSNumberInstance<NumberSystemInstance<T>>
-    new(number: number[]): NSNumberInstance<NumberSystemInstance<T>>
+    
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    (number: number): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    (number: string): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    (number: number[]): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    new(number: number): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    new(number: string): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Creates _NSNumber_ instance in current _NumberSystem_.
+     * @param number - Decimal number, string representation of decimal number,
+     * or array of digit powers, in current _NumberSystem_.
+     * 
+     * If number or string provided, **MUST** be nonnegative integer.
+     * 
+     * If array provided, **MUST** contain only numbers less than current _base_.
+     */
+    new(number: number[]): NSNumber<NumberSystemInstance<T>>
 }
 export interface NumberSystemPrivate<T extends IDigitsConfig | string[]> extends NumberSystemInstance<T> {
     digits: T
     base: number
     baseBigInt: JSBI
 
-    _maxInRankMap: { [key: number]: NSNumberInstance<NumberSystemInstance<T>> }
-    _minInRankMap: { [key: number]: NSNumberInstance<NumberSystemInstance<T>> }
+    _maxInRankMap: { [key: number]: NSNumber<NumberSystemInstance<T>> }
+    _minInRankMap: { [key: number]: NSNumber<NumberSystemInstance<T>> }
 }
 
 
+/**
+ * _NumberSystem_ constructor.
+ */
 export interface NumberSystemConstructor {
-    lt(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
-    le(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
-    gt(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
-    ge(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
-    ne(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
-    e(nsNumber1: NSNumberInstance<any>, nsNumber2: NSNumberInstance<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ < _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    lt(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ <= _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    le(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ > _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    gt(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ >= _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    ge(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ != _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    ne(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
+    /**
+     * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ == _nsNumber2_**.
+     * 
+     * @param nsNumber1 - _NSNumber_ instance.
+     * @param nsNumber2 - _NSNumber_ instance.
+     */
+    e(nsNumber1: NSNumber<any>, nsNumber2: NSNumber<any>): boolean
 
+    /**
+     * Creates _NumberSystem_ instances.
+     * @param digits - Digits array or _IDigitsConfig_ instance to create
+     * _NumberSystem_ instance. 
+     */
     new <T extends IDigitsConfig | string[]>(digits: T): NumberSystemInstance<T>
 }
 export interface NumberSystemConstructorPrivate extends NumberSystemConstructor { }
@@ -102,7 +299,7 @@ const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstruc
                         break
                     case 'object':
                     default:
-                        if (!(number instanceof Array)) {
+                        if (!(number instanceof Array) || !number.length) {
                             number = [0]
                         }
                         const numStr = powersArrToDecimal(number, this.system.base)
@@ -315,19 +512,19 @@ const NumberSystem: NumberSystemConstructor = (function (): NumberSystemConstruc
                 },
                 toString: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
-                        const powGen = this.digPowGenerator(0, this.digitsCount)
+                        const powGen = this.digPowGenerator(0, this.digitsCount - 1)
 
                         let numStr = ''
                         if (isDigitsConfig(this.system.digits)) {
                             for (const pow of powGen) {
-                                const charMassive = this.system.digits.digGen(pow!)
+                                const charMassive = this.system.digits.digGen(pow)
                                 numStr += charMassive[0]
                             }
                             return numStr
                         } else {
                             const digCharArr = this.system.digits as string[]
                             for (const pow of powGen) {
-                                numStr += digCharArr[pow!]
+                                numStr += digCharArr[pow]
                             }
                             return numStr
                         }

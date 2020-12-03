@@ -1,12 +1,12 @@
 import JSBI from 'jsbi'
-
 import { IDigitsConfig } from '../commonTypes'
 
+
 /**
- * Converts _powers_ array of give _base_  to decimal number string representation.
+ * Converts _powers_ array of given _base_ to decimal number string representation.
  * @param powers - _Powers_ array of given _base_. _Powers_ **MUST** be array of
  * nonnegative integers less than _base_.
- * @param base - _Base_ in which to consider given _powers_ array.
+ * @param base - _Base_ in which to consider given _powers_ array. _base_ **MUST** be integer more than 1.
  */
 export function powersArrToDecimal(powers: number[], base: number) {
     const baseBigInt = JSBI.BigInt(base)
@@ -159,7 +159,7 @@ export const digitsConfigMixer = function (...mixture: ([number, number] | [stri
                 }
             }
 
-            return powers.map((pow, powIndex) => {
+            return powers.map((_, powIndex) => {
                 const placementInfo = pozitionMatrix[powIndex]
                 const categoryIndex = placementInfo[0]
                 const categoryResult = categorizedResults[categoryIndex]

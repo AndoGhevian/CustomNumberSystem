@@ -6,27 +6,45 @@ export {
 
 export {
     isNsNumber,
-    NSNumberInstance,
+    NSNumber,
     NumberSystemInstance,
     NumberSystemConstructor,
 } from './NumberSystem'
+export { default as NumberSystem } from './NumberSystem'
 
 export {
     IDigitsConfig,
 } from './commonTypes'
 
 
-import NumberSystem, { isNsNumber } from './NumberSystem'
-const sys = new NumberSystem(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
 
-const num = sys(`173`)
-console.log(
-    isNsNumber([])
-)
+
+
+
+
+
+
+
+
+
+
+// import NumberSystem, { isNsNumber } from './NumberSystem'
+// const sys = new NumberSystem(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'])
+// new sys(1)
+// const num = sys(`173`)
+// console.log(
+//     isNsNumber([])
+// )
 
 // for (const pow of num.digPowGenerator(8, 1, 2)) {
 //     console.log(pow)
 // }
+
+
+
+
+
+
 
 
 // export * from './NSNumber'
