@@ -99,17 +99,6 @@ console.log(
 
 console.log(num.getDigit(10)) // undefined
 ```
-
-Or get **power** of digit at appropriate index.
-``` javascript
-console.log(
-    num.getPower(0), // 2
-    num.getPower(1), // 2
-    num.getPower(2), // 1
-    num.getPower(3), // 0
-    num.getPower(4), // 0
-)
-```
 > NOTE: For not existing digits **undefined** will be returned.
 
 You can get **generator of digits** for current number:
@@ -125,20 +114,6 @@ const step = 1
 const digGen = num.digGenerator(start, end, step)
 for(const dig of digGen) {
     console.log(dig.toNumber())
-}
-// Will be printed:
-// 2
-// 2
-// 1
-// 0
-// 0
-```
-
-Or **digit powers** generator for current number:
-``` javascript
-const powGen = num.digPowGenerator(start, end, step)
-for(const pow of powGen) {
-    console.log(pow)
 }
 // Will be printed:
 // 2
@@ -174,7 +149,7 @@ const start = sys2(10)
 const end = sys3(100)
 const step = sys2(1)
 
-const numGen = sys3.nsNumberGenerator(start, end, step)
+const numGen = sys3.numberGenerator(start, end, step)
 
 for(const num3 of numGen) {
     console.log(num3.toString())
