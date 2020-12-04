@@ -25,7 +25,7 @@ const num2 = sys3('123456789123456789123456789123456789123456789')
 Remember that whan you create numbers in current NumberSystem by providing number
 or string representation of number, they will be considered in **decimal** notation.
 
-You can create NSNumber by providing valid powers array, where powers represented by numbers in range **[0, system.base - 1]**.
+You can create number by providing valid powers array, where powers **MUST** be represented by numbers in range **[0, system.base - 1]**.
 ``` javascript
 const num = sys3([ 2, 2, 1, 0, 0 ])
 ```
@@ -34,7 +34,7 @@ Or you can simply convert number from one system to another:
 ``` javascript
 const sys2 = new NumberSystem(['O', 'L'])
 
-const num = sys2(9) // 1001 - in binary system.
+const num = sys2(8) // LOOO
 const converted = num.toSystem(sys3) // converting...
 ```
 
@@ -42,17 +42,26 @@ You cant create NumberSystem of base less than 2.
 
 After you create numbers you can manipulate them as you wish.
 ``` javascript
-const sys4 = new NumberSystem(['C', 'G', 'P', 'W'])
+const sys4 = new NumberSystem(['A', 'B', 'C', 'D'])
+const num = sys4(8) // CA
 
-const sum = nsNumber.add(num) // Sum will be NSNUmber in sys4 system.
+const sys2 = new NumberSystem(['O', 'L'])
+const operand = sys2(1) // L
+
+// Result will be number in sys4 system.
+const sum = num.add(operand) // CB
+const sbtr = num.subtract(operand) // A
+const mul = num.multiply(operand) // CA
+const mod = num.remainder(operand) // A
+const div = num.divide(operand) // CA
 ```
 
-You can find all arithmetical operations on NSNumber instance.
+You can find all arithmetical operations on number instance.
 > NOTE: 
-> - When using **subtract** method, If NSNumber less than _ArgumentNsNumber_, result will be **undefined**.
-> - When using **divide** method, If NSNumber less than _ArgumentNsNumber_, result will be **NSNumber.system(0)**.
+> - When using **subtract** method, If number less than _ArgumentNumber_, result will be **undefined**.
+> - When using **divide** method, If number less than _ArgumentNumber_, result will be **number.system(0)**.
 
-You can also compare NSNumbers with static methods of NumberSystem.
+You can also compare numbers values with static methods of NumberSystem.
 ``` javascript
 NumberSystem.lt(num1, num2) // less than
 NumberSystem.le(num1, num2) // less than or equal
@@ -61,23 +70,72 @@ NumberSystem.ge(num1, num2) // greater than or equal
 NumberSystem.ne(num1, num2) // not equal
 NumberSystem.e(num1, num2) // equal
 ```
-You can get **power** of digit at appropriate index **( 0 based )** read from left.
-``` javascript
-const num = sys3([ 2, 2, 1, 0, 0 ])
 
-num.getPower(0) === 2
-num.getPower(1) === 2
-num.getPower(2) === 1
-num.getPower(3) === 0
-num.getPower(4) === 0
+Or check if they are equal both by system instances and values.
+```javascript
+const sys4 = new NumberSystem(['A', 'B', 'C', 'D'])
+const sys2 = new NumberSystem(['O', 'L'])
+const sys2Another = new NumberSystem(['O', 'L'])
+
+sys2(1).equals(sys2(1)) === true
+
+sys2(1).equals(sys4(1)) === false
+sys2(1).equals(sys2Another(1)) === false
 ```
 
-Get generater of **digit powers** for current NSNumber:
+You can get digit at appropriate index **( 0 based )** read from left.
 ``` javascript
+const sys3 = new NumberSystem(['0', '1', '2'])
+
+const num = sys3([2, 2, 1, 0, 0])
+
+console.log(
+    num.getDigit(0).toString(), // 2
+    num.getDigit(1).toString(), // 2
+    num.getDigit(2).toString(), // 1
+    num.getDigit(3).toString(), // 0
+    num.getDigit(4).toString(), // 0
+)
+
+console.log(num.getDigit(10)) // undefined
+```
+> NOTE: For not existing digits **undefined** will be returned.
+
+Or get **power** of digit at appropriate index.
+``` javascript
+console.log(
+    num.getPower(0), // 2
+    num.getPower(1), // 2
+    num.getPower(2), // 1
+    num.getPower(3), // 0
+    num.getPower(4), // 0
+)
+```
+
+You can get **generator of digits** for current number:
+``` javascript
+const sys3 = new NumberSystem(['0', '1', '2'])
+
+const num = sys3([2, 2, 1, 0, 0])
+
 const start = 0
 const end = num.digitsCount - 1
 const step = 1
 
+const digGen = num.digGenerator(start, end, step)
+for(const dig of digGen) {
+    console.log(dig.toNumber())
+}
+// Will be printed:
+// 2
+// 2
+// 1
+// 0
+// 0
+```
+
+Or **digit powers** generator for current number:
+``` javascript
 const powGen = num.digPowGenerator(start, end, step)
 for(const pow of powGen) {
     console.log(pow)
@@ -89,17 +147,29 @@ for(const pow of powGen) {
 // 0
 // 0
 ```
-> NOTE: 
-> - If start or end less than **0**, then **0** will be 
-used accordingly for start or end.
-> - If start or end more than **num.digitsCount - 1**, then **num.digitsCount - 1** will be used accordingly for start or end.
-> - If step less or equal than **0** then **1** will be used as step.
+> NOTE:
+> - You can omit **_end/step_** then they will be set to **_(num.digitsCount - 1)/1_** appropriately.
+> - If **start** or **end** less than **0**, then **0** will be 
+used accordingly for **start** or **end**.
+> - If **start** or **end** more than **num.digitsCount - 1**, then **num.digitsCount - 1** will be used accordingly for **start** or **end**.
+> - If **step** less or equal than **0** then **1** will be used as **step**.
 
-You can get Generator of NSNumbers of NumberSystem instance.
+You can iterate through number digits using **for of** on number instances:
+```javascript
+const sys3 = new NumberSystem(['0', '1', '2'])
+
+const num = sys3([2, 2, 1, 0, 0])
+for(const dig of num) {
+    console.log(dig.toNumber())
+}
+```
+
+You can get Generator of numbers of NumberSystem instance.
 ``` javascript
 const sys2 = new NumberSystem(['0', '1'])
 const sys3 = new NumberSystem(['a', 'b', 'c'])
 
+// start, end, step can be numbers of any system.
 const start = sys2(10)
 const end = sys3(100)
 const step = sys2(1)
@@ -110,8 +180,14 @@ for(const num3 of numGen) {
     console.log(num3.toString())
 }
 ```
+> NOTE:
+> - If you **omit end**, generator will continue infinitely.
+> - If you **omit step**, it will be set to **1**.
+> - If **start** or **end** less than **0**, then **0** will be 
+used accordingly for **start** or **end**.
+> - If **step** less or equal than **0** then **1** will be used as **step**.
 
-You can get minimum or maximum NSNumbers in rank:
+You can get minimum or maximum numbers in rank:
 ```javascript
 const sys3 = new NumberSystem(['0', '1', '3'])
 
@@ -121,7 +197,7 @@ console.log(sys3.maxInRank(3).toString()) // 333
 > NOTE: 
 > - If rank is less than **1**, then **1** will be used as rank.
 
-Now note that **NSNumbers** are instances of only their **constructor NumberSystemInstances**, and **NumberSystemInstances** are instances of **NumberSystem**.
+Now note that **Numbers** are instances of only their **constructor NumberSystemInstances**, and **NumberSystemInstances** are instances of **NumberSystem**.
 ```javascript
 const sys2 = new NumberSystem(['0', '1'])
 const num2 = sys2(1)
@@ -137,11 +213,15 @@ console.log(sys2 instanceof NumberSystem) // true
 console.log(sys3 instanceof NumberSystem) // true
 ```
 
-You can check if some value is NSNumber.
+You can check if some value is number instance.
 ```javascript
-const { isNsNumber } = require('custom-number-system')
+const { NumberSystem } = require('custom-number-system')
 
-console.log(isNsNumber(num2)) // true
+const sys = new NumberSystem(['0', '1'])
+const num = sys2(1)
+
+console.log(NumberSystem.isNumber(num)) // true
+console.log(NumberSystem.isNumber(1)) // false
 ```
 
 ## Advanced
@@ -154,7 +234,7 @@ interface IDigitsConfig {
     readonly dinamicArity?: boolean,
 }
 ```
-Here digGen is binded to current object. It's must guarantee
+Here digGen method binded to current object. It's must guarantee
 that it will return digit for all **powers** from **0** to **maxBase**.
 
 The only modifiable property is **base**.

@@ -10,6 +10,19 @@ import {
 } from "../commonTypes"
 
 /**
+ * Checks if provided object is _NSNumber_ instance.
+ * @param obj - Object to check if it is _NSNumber_ instance.
+ */
+export const isNsNumber = function (obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>> {
+    if (obj instanceof Object
+        && Object.getPrototypeOf(obj).constructor
+        && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
+        return true
+    }
+    return false
+}
+
+/**
  * _NSNumber_ instance.
  */
 export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<NSNumber<S>> {
@@ -32,7 +45,7 @@ export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<
      * @param end - Generation end index. **MUST** be integer or **undefined**.
      * @param step - Generation step. **MUST** be positive integer or **undefined**.
      */
-    digGenerator(start: number, end?: number, step?: number): Generator<number>
+    digGenerator(start: number, end?: number, step?: number): Generator<NSNumber<S>>
     /**
      * Returns Generator of digit _powers_ from digit at _start_ to digit at _end_
      * With provided _step_.
