@@ -21,12 +21,12 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
     /**
      * _NSNumber_ digits count.
      */
-    readonly digitsCount: number
+    readonly length: number
     /**
      * 
-     * **NOTE: If _start_ or _end_ value is out of bounds  [0, NSNumber.digitsCount - 1]**
+     * **NOTE: If _start_ or _end_ value is out of bounds  [0, NSNumber.length - 1]**
      * **They will be assigned to 0(if less than 0)**
-     * **or NSNumber.digitsCount - 1(if more than NSNumber.digitsCount - 1) accordingly.**
+     * **or NSNumber.length - 1(if more than NSNumber.length - 1) accordingly.**
      * @param start - Generation start index(0 based). **MUST** be integer.
      * @param end - Generation end index. **MUST** be integer or **undefined**.
      * @param step - Generation step. **MUST** be positive integer or **undefined**.
@@ -329,16 +329,16 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 },
                 digPowGenerator: {
                     value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end?: number, step?: number) {
-                        const digitsCount = this.digitsCount
-                        if (end === undefined) end = digitsCount - 1
+                        const length = this.length
+                        if (end === undefined) end = length - 1
                         if (step === undefined) step = 1
 
                         if (start < 0) start = 0
                         if (end < 0) end = 0
                         if (step < 0) step = 1
 
-                        if (start >= digitsCount) start = digitsCount - 1
-                        if (end >= digitsCount) end = digitsCount - 1
+                        if (start >= length) start = length - 1
+                        if (end >= length) end = length - 1
 
                         if (this._digitsArr) {
                             const digitsArr = this._digitsArr
@@ -361,7 +361,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
 
                             if (start <= end) {
                                 let expReducer = 1
-                                let lastBaseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(digitsCount - start))
+                                let lastBaseExp = JSBI.exponentiate(baseBigInt, JSBI.BigInt(length - start))
 
                                 let lastNum = numBigInt
                                 let pos = start
@@ -388,7 +388,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                                     yield yieldRes
                                 }
                             } else {
-                                let exp = digitsCount - start
+                                let exp = length - start
 
                                 let lastNum = numBigInt
                                 let pos = start
@@ -434,13 +434,13 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                             return this._digitsMap![position]
                         }
 
-                        const digitsCount = this.digitsCount
-                        if (position >= digitsCount) {
+                        const length = this.length
+                        if (position >= length) {
                             return undefined
                         }
 
                         const base = this.system.baseBigInt
-                        const baseExp = JSBI.exponentiate(base, JSBI.BigInt(digitsCount - position))
+                        const baseExp = JSBI.exponentiate(base, JSBI.BigInt(length - position))
                         const numRight = JSBI.remainder(this.bigInt, baseExp)
 
                         const digit = JSBI.toNumber(JSBI.divide(numRight, JSBI.divide(baseExp, base)))
@@ -450,18 +450,18 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return digit
                     }
                 },
-                digitsCount: {
+                length: {
                     get: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
                         if (!this._digitsCount) {
                             const base = this.system.baseBigInt
 
                             let divideNumber = JSBI.divide(this.bigInt, base)
-                            let digitsCount = 1
+                            let length = 1
                             while (!JSBI.equal(divideNumber, JSBI.BigInt(0))) {
-                                digitsCount++
+                                length++
                                 divideNumber = JSBI.divide(divideNumber, base)
                             }
-                            this._digitsCount = digitsCount
+                            this._digitsCount = length
                         }
                         return this._digitsCount
                     },
@@ -518,7 +518,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 },
                 toString: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
-                        const powGen = this.digPowGenerator(0, this.digitsCount - 1)
+                        const powGen = this.digPowGenerator(0, this.length - 1)
 
                         let numStr = ''
                         if (isDigitsConfig(this.system.digits)) {
