@@ -15,6 +15,10 @@ import {
  */
 export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<NSNumber<S>> {
     /**
+     * Digit of current number.
+     */
+    [index: number]: NSNumber<S>
+    /**
      * _NumberSystem_ instance in which represented current _NSNumber_.
      */
     readonly system: S
@@ -45,9 +49,11 @@ export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<
      * Adds two _NSNumber_ instances.
      * 
      * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * 
+     * **NOTE: If result less than zero, _undefined_ will be returned.**
      * @param nsNumber - _NSNumber_ to add.
      */
-    add(nsNumber: NSNumber<any>): NSNumber<S>
+    add<T extends NSNumber<any> | string | number>(nsNumber: T): T extends NSNumber<any> ? NSNumber<S> : NSNumber<S> | undefined
     /**
      * Subtract two _NSNumber_ instances.
      * 
@@ -56,30 +62,45 @@ export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<
      * **NOTE: If result less than zero, _undefined_ will be returned.**
      * @param nsNumber - _NSNumber_ reducer.
      */
-    subtract(nsNumber: NSNumber<any>): NSNumber<S> | undefined
+    subtract(nsNumber: NSNumber<any> | string | number): NSNumber<S> | undefined
     /**
      * Calculates _**CurrentNSNumebr** modulo **ArgumentNSNumber**_.
      * 
      * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * 
+     * **NOTE: Nonnegative remainder will be returned. And -**
+     * - **If divider equal to 0, _undefined_ will be returned.**
      * @param nsNumber - _NSNumber_ divider.
      */
-    remainder(nsNumber: NSNumber<any>): NSNumber<S>
+    remainder(nsNumber: NSNumber<any> | string | number): NSNumber<S> | undefined
     /**
      * Multiply two _NSNumber_ instances.
      * 
      * Result will be _NSNumber_ of **CurrentNsNumber.system**.
+     * 
+     * **NOTE: If result less than zero, _undefined_ will be returned.**
      * @param nsNumber - _NSNumber_ multipler.
      */
-    multiply(nsNumber: NSNumber<any>): NSNumber<S>
+    multiply<T extends NSNumber<any> | string | number>(nsNumber: T): NSNumber<S> | undefined
     /**
      * Divide two _NSNumber_ instances.
      * 
      * Result will be _NSNumber_ of **CurrentNsNumber.system**.
      * 
-     * **NOTE: Integer part of division will be taken.**
+     * **NOTE: Integer part of division will be taken. And -**
+     * - **If result less than zero, _undefined_ will be returned.**
+     * - **If divider equals to 0, _undefined_ will be returned.**
      * @param nsNumber - _NSNumber_ divider.
      */
-    divide(nsNumber: NSNumber<any>): NSNumber<S>
+    divide(nsNumber: NSNumber<any> | string | number): NSNumber<S> | undefined
+    /**
+     * Immutably increments number.
+     */
+    increment(): NSNumber<S>
+    /**
+     * Immutably decrements number.
+     */
+    decrement(): NSNumber<S> | undefined
     /**
      * Returns number representation of current _NSNumber_.
      */
@@ -93,11 +114,6 @@ export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<
      * @param sys - _NumberSystem_ instance to convert to.
      */
     toSystem<T extends IDigitsConfig | string[]>(sys: NumberSystemInstance<T>): NSNumber<NumberSystemInstance<T>>
-    /**
-     * Checks if both numbers belongs to samee _NumberSystem_ instance and represents same value.
-     * @param nsNumber - _NSNumber_ to check against.
-     */
-    equals(nsNumber: NSNumber<NumberSystemInstance<any>>): boolean
 }
 export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NSNumber<S> {
     system: S
@@ -343,7 +359,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         for (const pow of powGen) {
                             yield new this.system(pow)
                         }
-                    }
+                    },
                 },
                 mapToArr: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>,) {
@@ -362,7 +378,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 digGenerator: {
                     value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end?: number, step?: number) {
                         const powGen = this.digPowGenerator(start, end, step)
-                        for(const pow of powGen) {
+                        for (const pow of powGen) {
                             yield new this.system(pow)
                         }
                     }
@@ -493,7 +509,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 getDigit: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, position: number) {
                         const pow = this.getPower(position)
-                        if(pow === undefined) return undefined
+                        if (pow === undefined) return undefined
 
                         return new this.system(pow)
                     }
@@ -517,19 +533,24 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                     enumerable: true
                 },
                 add: {
-                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any> | string | number) {
                         const sys = this.system
-                        const resultBigInt = JSBI.add(this.bigInt, nsNumber.bigInt)
+                        const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
+                        const resultBigInt = JSBI.add(this.bigInt, operand)
 
+                        if(JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
+                            return undefined
+                        }
                         return new sys(resultBigInt.toString())
                     }
                 },
                 subtract: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
                         const sys = this.system
-                        const resultBigInt = JSBI.remainder(this.bigInt, nsNumber.bigInt)
+                        const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
+                        const resultBigInt = JSBI.subtract(this.bigInt, operand)
 
-                        if (JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
+                        if(JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
                             return undefined
                         }
                         return new sys(resultBigInt.toString())
@@ -538,7 +559,12 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 remainder: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
                         const sys = this.system
-                        const resultBigInt = JSBI.remainder(this.bigInt, nsNumber.bigInt)
+                        const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
+
+                        if (JSBI.equal(operand, JSBI.BigInt(0))) {
+                            return undefined
+                        }
+                        const resultBigInt = JSBI.remainder(this.bigInt, operand)
 
                         return new sys(resultBigInt.toString())
                     }
@@ -546,7 +572,12 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 multiply: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
                         const sys = this.system
-                        const resultBigInt = JSBI.multiply(this.bigInt, nsNumber.bigInt)
+                        const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
+
+                        if(JSBI.lessThan(operand, JSBI.BigInt(0))) {
+                            return undefined
+                        }
+                        const resultBigInt = JSBI.multiply(this.bigInt, operand)
 
                         return new sys(resultBigInt.toString())
                     }
@@ -554,9 +585,24 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 divide: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
                         const sys = this.system
-                        const resultBigInt = JSBI.divide(this.bigInt, nsNumber.bigInt)
+                        const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
+
+                        if (JSBI.lessThanOrEqual(operand, JSBI.BigInt(0))) {
+                            return undefined
+                        }
+                        const resultBigInt = JSBI.divide(this.bigInt, operand)
 
                         return new sys(resultBigInt.toString())
+                    }
+                },
+                increment: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
+                        return this.add(1)
+                    }
+                },
+                decrement: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
+                        return this.subtract(1)
                     }
                 },
                 toNumber: {
@@ -589,14 +635,15 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return system(this.bigInt.toString())
                     }
                 },
-                equals: {
-                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
-                        if (this.system === nsNumber.system && JSBI.equal(this.bigInt, nsNumber.bigInt)) {
-                            return true
-                        }
-                        return false
+            })
+
+            NumberSystemInstance.prototype = new Proxy(NumberSystemInstance.prototype, {
+                get: function (target, property, reciver) {
+                    if (typeof property === 'symbol' || isNaN(+property)) {
+                        return Reflect.get(target, property, reciver)
                     }
-                },
+                    return reciver.getDigit(+property)
+                }
             })
             return NumberSystemInstance
         })()
@@ -721,12 +768,12 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
         },
         ne: {
             value: (nsNumber1: NSNumberPrivate<any>, nsNumber2: NSNumberPrivate<any>) => {
-                return JSBI.equal(nsNumber1.bigInt, nsNumber2.bigInt)
+                return JSBI.notEqual(nsNumber1.bigInt, nsNumber2.bigInt)
             }
         },
         e: {
             value: (nsNumber1: NSNumberPrivate<any>, nsNumber2: NSNumberPrivate<any>) => {
-                return JSBI.notEqual(nsNumber1.bigInt, nsNumber2.bigInt)
+                return JSBI.equal(nsNumber1.bigInt, nsNumber2.bigInt)
             }
         },
     })
