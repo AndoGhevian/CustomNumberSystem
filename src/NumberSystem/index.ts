@@ -10,19 +10,6 @@ import {
 
 
 /**
- * Checks if provided object is _NSNumber_ instance.
- * @param obj - Object to check if it is _NSNumber_ instance.
- */
-export function isNsNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>> {
-    if (obj instanceof Object
-        && Object.getPrototypeOf(obj).constructor
-        && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
-        return true
-    }
-    return false
-}
-
-/**
  * _NSNumber_ instance.
  */
 export interface NSNumber<S extends NumberSystemInstance<any>> {
@@ -227,6 +214,11 @@ export interface NumberSystemPrivate<T extends IDigitsConfig | string[]> extends
  * _NumberSystem_ constructor.
  */
 export interface NumberSystemConstructor {
+    /**
+     * Checks if provided object is _NSNumber_ instance.
+     * @param obj - Object to check if it is _NSNumber_ instance.
+     */
+    isNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>>
     /**
      * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ < _nsNumber2_**.
      * 
@@ -561,7 +553,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
     Object.defineProperties(NumberSystem.prototype, {
         nsNumberGenerator: {
             value: function* (this: NumberSystemPrivate<any>, start: NSNumberPrivate<any>, end: NSNumberPrivate<any>, step?: NSNumberPrivate<any>) {
-                if (!isNsNumber(step)) {
+                if (!NumberSystem.isNumber(step)) {
                     step = new this(1) as NSNumberPrivate<any>
                 }
 
@@ -621,6 +613,16 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
     })
 
     Object.defineProperties(NumberSystem, {
+        isNumber: {
+            value: function(obj: any) {
+                if (obj instanceof Object
+                    && Object.getPrototypeOf(obj).constructor
+                    && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
+                    return true
+                }
+                return false
+            }
+        },
         lt: {
             value: (nsNumber1: NSNumberPrivate<any>, nsNumber2: NSNumberPrivate<any>) => {
                 return JSBI.lessThan(nsNumber1.bigInt, nsNumber2.bigInt)
