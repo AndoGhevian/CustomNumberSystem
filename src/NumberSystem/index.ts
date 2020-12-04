@@ -79,7 +79,10 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
      * @param nsNumber - _NSNumber_ divider.
      */
     divide(nsNumber: NSNumber<any>): NSNumber<S>
-
+    /**
+     * Returns number representation of current _NSNumber_.
+     */
+    toNumber(): number
     /**
      * Returns string representation of current _NSNumber_.
      */
@@ -508,6 +511,11 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return new sys(resultBigInt.toString())
                     }
                 },
+                toNumber: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
+                        return JSBI.toNumber(this.bigInt)
+                    }
+                },
                 toString: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
                         const powGen = this.digPowGenerator(0, this.digitsCount - 1)
@@ -565,7 +573,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
 
                 let sumBigInt = start.bigInt
                 if (!end) {
-                    while(true) {
+                    while (true) {
                         yield new this(sumBigInt.toString())
 
                         sumBigInt = JSBI.add(sumBigInt, step.bigInt)
