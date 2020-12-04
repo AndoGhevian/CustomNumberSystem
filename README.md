@@ -99,7 +99,6 @@ console.log(
 
 console.log(num.getDigit(10)) // undefined
 ```
-> NOTE: For not existing digits **undefined** will be returned.
 
 Or get **power** of digit at appropriate index.
 ``` javascript
@@ -111,6 +110,7 @@ console.log(
     num.getPower(4), // 0
 )
 ```
+> NOTE: For not existing digits **undefined** will be returned.
 
 You can get **generator of digits** for current number:
 ``` javascript
