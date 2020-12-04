@@ -1,5 +1,6 @@
 import JSBI from "jsbi"
 import {
+    digitsConfigMixer,
     isDigitsConfig,
     powersArrToDecimal,
 } from "../utils"
@@ -27,10 +28,10 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
      * **They will be assigned to 0(if less than 0)**
      * **or NSNumber.digitsCount - 1(if more than NSNumber.digitsCount - 1) accordingly.**
      * @param start - Generation start index(0 based). **MUST** be integer.
-     * @param end - Generation end index. **MUST** be integer.
-     * @param step - Generation step. **MUST** be positive integer.
+     * @param end - Generation end index. **MUST** be integer or **undefined**.
+     * @param step - Generation step. **MUST** be positive integer or **undefined**.
      */
-    digPowGenerator(start: number, end: number, step?: number): Generator<number>
+    digPowGenerator(start: number, end?: number, step?: number): Generator<number>
     /**
      * Returns power of digit at give position of current number, or _undefined_ if not existing digit position provided.
      * @param position - Index of digit to return power for.
@@ -122,11 +123,13 @@ export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
      * **NOTE:** _start_ and _end_ included.
      * @param start - _NSNumber_ to start generation from.
      * @param end - _NSNumber_ to finish generation on.
+     * 
+     * **Default: Continue Infinitely**
      * @param step - _NSNumber_ representing step of generation.
      * 
      * **Default: 1**
      */
-    nsNumberGenerator(start: NSNumber<any>, end: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
+    nsNumberGenerator(start: NSNumber<any>, end?: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
     /**
      * Generates maximum _NSNumber_ of current _NumberSystem_ within given _rank_.
      * @param rank - rank of number to generate. **MUST** be positive integer.
@@ -138,7 +141,7 @@ export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
      */
     minInRank(rank: number): NSNumber<NumberSystemInstance<T>>
 
-    
+
     /**
      * Creates _NSNumber_ instance in current _NumberSystem_.
      * @param number - Decimal number, string representation of decimal number,
@@ -322,12 +325,15 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                     }
                 },
                 digPowGenerator: {
-                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end: number, step?: number) {
+                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end?: number, step?: number) {
+                        const digitsCount = this.digitsCount
+                        if (end === undefined) end = digitsCount - 1
+                        if (step === undefined) step = 1
+
                         if (start < 0) start = 0
                         if (end < 0) end = 0
-                        if (!step || step < 0) step = 1
+                        if (step < 0) step = 1
 
-                        const digitsCount = this.digitsCount
                         if (start >= digitsCount) start = digitsCount - 1
                         if (end >= digitsCount) end = digitsCount - 1
 
@@ -552,13 +558,19 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
 
     Object.defineProperties(NumberSystem.prototype, {
         nsNumberGenerator: {
-            value: function* (this: NumberSystemPrivate<any>, start: NSNumberPrivate<any>, end: NSNumberPrivate<any>, step?: NSNumberPrivate<any>) {
+            value: function* (this: NumberSystemPrivate<any>, start: NSNumberPrivate<any>, end?: NSNumberPrivate<any>, step?: NSNumberPrivate<any>) {
                 if (!NumberSystem.isNumber(step)) {
                     step = new this(1) as NSNumberPrivate<any>
                 }
 
                 let sumBigInt = start.bigInt
-                if (NumberSystem.le(start, end)) {
+                if (!end) {
+                    while(true) {
+                        yield new this(sumBigInt.toString())
+
+                        sumBigInt = JSBI.add(sumBigInt, step.bigInt)
+                    }
+                } else if (NumberSystem.le(start, end)) {
                     while (JSBI.greaterThanOrEqual(end.bigInt, sumBigInt)) {
                         yield new this(sumBigInt.toString())
 
@@ -614,7 +626,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
 
     Object.defineProperties(NumberSystem, {
         isNumber: {
-            value: function(obj: any) {
+            value: function (obj: any) {
                 if (obj instanceof Object
                     && Object.getPrototypeOf(obj).constructor
                     && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
