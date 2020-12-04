@@ -1,5 +1,6 @@
 import JSBI from "jsbi"
 import {
+    digitsConfigMixer,
     isDigitsConfig,
     powersArrToDecimal,
 } from "../utils"
@@ -8,12 +9,11 @@ import {
     IDigitsConfig,
 } from "../commonTypes"
 
-
 /**
  * Checks if provided object is _NSNumber_ instance.
  * @param obj - Object to check if it is _NSNumber_ instance.
  */
-export function isNsNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>> {
+export const isNsNumber = function (obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>> {
     if (obj instanceof Object
         && Object.getPrototypeOf(obj).constructor
         && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
@@ -25,7 +25,7 @@ export function isNsNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigi
 /**
  * _NSNumber_ instance.
  */
-export interface NSNumber<S extends NumberSystemInstance<any>> {
+export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<NSNumber<S>> {
     /**
      * _NumberSystem_ instance in which represented current _NSNumber_.
      */
@@ -35,23 +35,43 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
      */
     readonly digitsCount: number
     /**
+     * Returns Generator of digits from digit at _start_ to digit at _end_
+     * With provided _step_.
      * 
      * **NOTE: If _start_ or _end_ value is out of bounds  [0, NSNumber.digitsCount - 1]**
      * **They will be assigned to 0(if less than 0)**
      * **or NSNumber.digitsCount - 1(if more than NSNumber.digitsCount - 1) accordingly.**
      * @param start - Generation start index(0 based). **MUST** be integer.
-     * @param end - Generation end index. **MUST** be integer.
-     * @param step - Generation step. **MUST** be positive integer.
+     * @param end - Generation end index. **MUST** be integer or **undefined**.
+     * @param step - Generation step. **MUST** be positive integer or **undefined**.
      */
-    digPowGenerator(start: number, end: number, step?: number): Generator<number>
+    digGenerator(start: number, end?: number, step?: number): Generator<NSNumber<S>>
+    /**
+     * Returns Generator of digit _powers_ from digit at _start_ to digit at _end_
+     * With provided _step_.
+     * 
+     * **NOTE: If _start_ or _end_ value is out of bounds  [0, NSNumber.digitsCount - 1]**
+     * **They will be assigned to 0(if less than 0)**
+     * **or NSNumber.digitsCount - 1(if more than NSNumber.digitsCount - 1) accordingly.**
+     * @param start - Generation start index(0 based). **MUST** be integer.
+     * @param end - Generation end index. **MUST** be integer or **undefined**.
+     * @param step - Generation step. **MUST** be positive integer or **undefined**.
+     */
+    digPowGenerator(start: number, end?: number, step?: number): Generator<number>
+    /**
+     * Returnes digit at given position.
+     * @param position - Index of digit to return.
+     * 
+     * **MUST** be integer.
+     */
+    getDigit(position: number): NSNumber<S> | undefined
     /**
      * Returns power of digit at give position of current number, or _undefined_ if not existing digit position provided.
      * @param position - Index of digit to return power for.
      * 
      * **MUST** be integer.
      */
-    getPower(position: number): number
-
+    getPower(position: number): number | undefined
     /**
      * Adds two _NSNumber_ instances.
      * 
@@ -91,7 +111,10 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
      * @param nsNumber - _NSNumber_ divider.
      */
     divide(nsNumber: NSNumber<any>): NSNumber<S>
-
+    /**
+     * Returns number representation of current _NSNumber_.
+     */
+    toNumber(): number
     /**
      * Returns string representation of current _NSNumber_.
      */
@@ -101,11 +124,16 @@ export interface NSNumber<S extends NumberSystemInstance<any>> {
      * @param sys - _NumberSystem_ instance to convert to.
      */
     toSystem<T extends IDigitsConfig | string[]>(sys: NumberSystemInstance<T>): NSNumber<NumberSystemInstance<T>>
+    /**
+     * Checks if both numbers belongs to samee _NumberSystem_ instance and represents same value.
+     * @param nsNumber - _NSNumber_ to check against.
+     */
+    equals(nsNumber: NSNumber<NumberSystemInstance<any>>): boolean
 }
 export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NSNumber<S> {
     system: S
     bigInt: JSBI
-    _digitsCount: number
+    _length: number
     _digitsArr: number[] | undefined
     _digitsMap: { [key: number]: number } | undefined
     _digitsMapLength: number | undefined
@@ -135,11 +163,13 @@ export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
      * **NOTE:** _start_ and _end_ included.
      * @param start - _NSNumber_ to start generation from.
      * @param end - _NSNumber_ to finish generation on.
+     * 
+     * **Default: Continue Infinitely**
      * @param step - _NSNumber_ representing step of generation.
      * 
      * **Default: 1**
      */
-    nsNumberGenerator(start: NSNumber<any>, end: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
+    nsNumberGenerator(start: NSNumber<any>, end?: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
     /**
      * Generates maximum _NSNumber_ of current _NumberSystem_ within given _rank_.
      * @param rank - rank of number to generate. **MUST** be positive integer.
@@ -151,7 +181,7 @@ export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
      */
     minInRank(rank: number): NSNumber<NumberSystemInstance<T>>
 
-    
+
     /**
      * Creates _NSNumber_ instance in current _NumberSystem_.
      * @param number - Decimal number, string representation of decimal number,
@@ -227,6 +257,11 @@ export interface NumberSystemPrivate<T extends IDigitsConfig | string[]> extends
  * _NumberSystem_ constructor.
  */
 export interface NumberSystemConstructor {
+    /**
+     * Checks if provided object is _NSNumber_ instance.
+     * @param obj - Object to check if it is _NSNumber_ instance.
+     */
+    isNumber(obj: any): obj is NSNumber<NumberSystemInstance<IDigitsConfig | string[]>>
     /**
      * Compares two _NsNumbers_. Returnes **true** if **_nsNumber1_ < _nsNumber2_**.
      * 
@@ -305,7 +340,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         const numStr = powersArrToDecimal(number, this.system.base)
 
                         this.bigInt = JSBI.BigInt(numStr)
-                        this._digitsCount = number.length
+                        this._length = number.length
                         this._digitsArr = [...number]
 
                         this._digitsMap = undefined
@@ -313,11 +348,18 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         break
                 }
             } as any
-
             Object.defineProperties(NumberSystemInstance.prototype, {
+                [Symbol.iterator]: {
+                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
+                        const powGen = this.digPowGenerator(0)
+                        for (const pow of powGen) {
+                            yield new this.system(pow)
+                        }
+                    }
+                },
                 mapToArr: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>,) {
-                        if (this._digitsMapLength === this._digitsCount) {
+                        if (this._digitsMapLength === this._length) {
                             const digitsMap = this._digitsMap!
                             this._digitsMap = undefined
                             this._digitsMapLength = undefined
@@ -329,13 +371,24 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         }
                     }
                 },
+                digGenerator: {
+                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end?: number, step?: number) {
+                        const powGen = this.digPowGenerator(start, end, step)
+                        for(const pow of powGen) {
+                            yield new this.system(pow)
+                        }
+                    }
+                },
                 digPowGenerator: {
-                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end: number, step?: number) {
+                    value: function* (this: NSNumberPrivate<NumberSystemPrivate<T>>, start: number, end?: number, step?: number) {
+                        const digitsCount = this.digitsCount
+                        if (end === undefined) end = digitsCount - 1
+                        if (step === undefined) step = 1
+
                         if (start < 0) start = 0
                         if (end < 0) end = 0
-                        if (!step || step < 0) step = 1
+                        if (step < 0) step = 1
 
-                        const digitsCount = this.digitsCount
                         if (start >= digitsCount) start = digitsCount - 1
                         if (end >= digitsCount) end = digitsCount - 1
 
@@ -449,9 +502,17 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return digit
                     }
                 },
+                getDigit: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, position: number) {
+                        const pow = this.getPower(position)
+                        if(pow === undefined) return undefined
+
+                        return new this.system(pow)
+                    }
+                },
                 digitsCount: {
                     get: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
-                        if (!this._digitsCount) {
+                        if (!this._length) {
                             const base = this.system.baseBigInt
 
                             let divideNumber = JSBI.divide(this.bigInt, base)
@@ -460,9 +521,9 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                                 digitsCount++
                                 divideNumber = JSBI.divide(divideNumber, base)
                             }
-                            this._digitsCount = digitsCount
+                            this._length = digitsCount
                         }
-                        return this._digitsCount
+                        return this._length
                     },
                     set: () => { },
                     enumerable: true
@@ -510,6 +571,11 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return new sys(resultBigInt.toString())
                     }
                 },
+                toNumber: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
+                        return JSBI.toNumber(this.bigInt)
+                    }
+                },
                 toString: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>) {
                         const powGen = this.digPowGenerator(0, this.digitsCount - 1)
@@ -533,6 +599,14 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 toSystem: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, system: NumberSystemPrivate<any>) {
                         return system(this.bigInt.toString())
+                    }
+                },
+                equals: {
+                    value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any>) {
+                        if (this.system === nsNumber.system && JSBI.equal(this.bigInt, nsNumber.bigInt)) {
+                            return true
+                        }
+                        return false
                     }
                 },
             })
@@ -560,13 +634,19 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
 
     Object.defineProperties(NumberSystem.prototype, {
         nsNumberGenerator: {
-            value: function* (this: NumberSystemPrivate<any>, start: NSNumberPrivate<any>, end: NSNumberPrivate<any>, step?: NSNumberPrivate<any>) {
-                if (!isNsNumber(step)) {
+            value: function* (this: NumberSystemPrivate<any>, start: NSNumberPrivate<any>, end?: NSNumberPrivate<any>, step?: NSNumberPrivate<any>) {
+                if (!NumberSystem.isNumber(step)) {
                     step = new this(1) as NSNumberPrivate<any>
                 }
 
                 let sumBigInt = start.bigInt
-                if (NumberSystem.le(start, end)) {
+                if (!end) {
+                    while (true) {
+                        yield new this(sumBigInt.toString())
+
+                        sumBigInt = JSBI.add(sumBigInt, step.bigInt)
+                    }
+                } else if (NumberSystem.le(start, end)) {
                     while (JSBI.greaterThanOrEqual(end.bigInt, sumBigInt)) {
                         yield new this(sumBigInt.toString())
 
@@ -621,6 +701,16 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
     })
 
     Object.defineProperties(NumberSystem, {
+        isNumber: {
+            value: function (obj: any) {
+                if (obj instanceof Object
+                    && Object.getPrototypeOf(obj).constructor
+                    && Object.getPrototypeOf(Object.getPrototypeOf(obj).constructor) === NumberSystem.prototype) {
+                    return true
+                }
+                return false
+            }
+        },
         lt: {
             value: (nsNumber1: NSNumberPrivate<any>, nsNumber2: NSNumberPrivate<any>) => {
                 return JSBI.lessThan(nsNumber1.bigInt, nsNumber2.bigInt)
