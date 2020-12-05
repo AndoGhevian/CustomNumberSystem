@@ -39,27 +39,30 @@ export {
 // const num = sys_10(dec)
 
 // console.log(
-//     num.length,
-//     num.toSystem(sys_2).toString(),
-//     num.toNumber()
+//     '1111' in num
 // )
-// console.log()
 
-// for() {
-//     let num = num.increment()
+// for (const index in num) {
+//     console.log(num[index].toNumber())
 // }
 
-// console.log(num[0].increment())
-// console.log(
-//     1 in num
-// )
 
+// // console.log((num as any).hasOwnProperty('_length'))
+// // for() {
+// //     let num = num.increment()
+// // }
 
-
+// // console.log(num[0].increment())
 // // console.log(
-// //    NumberSystem.e(sys_2(1), sys_10(1)),
+// //     1 in num
 // // )
 
-// // for(const dig of num) {
-// //     console.log(dig.toString())
-// // }
+
+
+// // // console.log(
+// // //    NumberSystem.e(sys_2(1), sys_10(1)),
+// // // )
+
+// // // for(const dig of num) {
+// // //     console.log(dig.toString())
+// // // }

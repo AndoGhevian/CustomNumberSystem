@@ -122,6 +122,7 @@ export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NS
     _digitsArr: number[] | undefined
     _digitsMap: { [key: number]: number } | undefined
     _digitsMapLength: number | undefined
+    _ownKeys: (string | symbol | number)[] | undefined
 
     mapToArr(): void
     /**
@@ -327,10 +328,36 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
         const NumberSystemInstance: NumberSystemPrivate<T> = (function (): NumberSystemPrivate<T> {
             const NumberSystemInstance: NumberSystemPrivate<T> = function (this: NSNumberPrivate<NumberSystemPrivate<T>>, number: number | string | number[]) {
                 if (!new.target) return new (NumberSystemInstance as any)(number)
-                this.system = NumberSystemInstance
-                this._digitsArr = undefined
-                this._digitsMap = {}
-                this._digitsMapLength = 0
+                Object.defineProperties(this, {
+                    system: {
+                        value: NumberSystemInstance,
+                        writable: true
+                    },
+                    bigInt: {
+                        value: undefined,
+                        writable: true
+                    },
+                    _length: {
+                        value: undefined,
+                        writable: true
+                    },
+                    _digitsArr: {
+                        value: undefined,
+                        writable: true
+                    },
+                    _digitsMap: {
+                        value: {},
+                        writable: true
+                    },
+                    _digitsMapLength: {
+                        value: 0,
+                        writable: true
+                    },
+                    _ownKeys: {
+                        value: undefined,
+                        writable: true,
+                    }
+                })
                 switch (typeof number) {
                     case 'number':
                     case 'string':
@@ -351,6 +378,27 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         this._digitsMapLength = undefined
                         break
                 }
+                return new Proxy(this, {
+                    has: function (target, p) {
+                        if (typeof p === 'symbol' || isNaN(+p)) {
+                            return p in target
+                        }
+                        return +p >= 0 && target.length > +p
+                    },
+                    ownKeys: function (target) {
+                        if (!target._ownKeys) {
+                            const originalOwnKeys = Reflect.ownKeys(target)
+                            target._ownKeys = [...originalOwnKeys, ...[...Array(target.length)].map((_, i) => i + '')]
+                        }
+                        return target._ownKeys
+                    },
+                    getOwnPropertyDescriptor: function (target, p) {
+                        if (typeof p === 'symbol' || isNaN(+p)) {
+                            return Reflect.getOwnPropertyDescriptor(target, p)
+                        }
+                        return { configurable: true, enumerable: true, value: undefined, writable: false }
+                    },
+                })
             } as any
             Object.defineProperties(NumberSystemInstance.prototype, {
                 [Symbol.iterator]: {
@@ -529,8 +577,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         }
                         return this._length
                     },
-                    set: () => { },
-                    enumerable: true
+                    set: () => { }
                 },
                 add: {
                     value: function (this: NSNumberPrivate<NumberSystemPrivate<T>>, nsNumber: NSNumberPrivate<any> | string | number) {
@@ -538,7 +585,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
                         const resultBigInt = JSBI.add(this.bigInt, operand)
 
-                        if(JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
+                        if (JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
                             return undefined
                         }
                         return new sys(resultBigInt.toString())
@@ -550,7 +597,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
                         const resultBigInt = JSBI.subtract(this.bigInt, operand)
 
-                        if(JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
+                        if (JSBI.lessThan(resultBigInt, JSBI.BigInt(0))) {
                             return undefined
                         }
                         return new sys(resultBigInt.toString())
@@ -574,7 +621,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         const sys = this.system
                         const operand = NumberSystem.isNumber(nsNumber) ? (nsNumber as NSNumberPrivate<any>).bigInt : JSBI.BigInt(nsNumber)
 
-                        if(JSBI.lessThan(operand, JSBI.BigInt(0))) {
+                        if (JSBI.lessThan(operand, JSBI.BigInt(0))) {
                             return undefined
                         }
                         const resultBigInt = JSBI.multiply(this.bigInt, operand)
@@ -638,11 +685,11 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
             })
 
             NumberSystemInstance.prototype = new Proxy(NumberSystemInstance.prototype, {
-                get: function (target, property, reciver) {
-                    if (typeof property === 'symbol' || isNaN(+property)) {
-                        return Reflect.get(target, property, reciver)
+                get: function (target, p, reciver) {
+                    if (typeof p === 'symbol' || isNaN(+p)) {
+                        return Reflect.get(target, p, reciver)
                     }
-                    return reciver.getDigit(+property)
+                    return reciver.getDigit(+p)
                 }
             })
             return NumberSystemInstance
