@@ -1,11 +1,10 @@
 # CustomNumberSystem
-**V3.0.0**
-
 **With This You can flexibly generate strings also**
 
 Welcome to _Customizable Number Systems_ world. You will able to customize your system characters.
 Easily make Transitions and Generate Numbers of any System. By the way, this library referres only to **nonnegative integers**.
 
+> NOTE: All objects in this library are **immutable**.
 
 Ok, Lets See if it meets your requirements.
 
@@ -38,7 +37,7 @@ const num = sys2(8) // LOOO
 const converted = num.toSystem(sys3) // converting...
 ```
 
-You cant create NumberSystem of base less than 2.
+You **CANT** create NumberSystem of base less than 2.
 
 After you create numbers you can manipulate them as you wish.
 ``` javascript
@@ -50,16 +49,23 @@ const operand = sys2(1) // L
 
 // Result will be number in sys4 system.
 const sum = num.add(operand) // CB
-const sbtr = num.subtract(operand) // A
-const mul = num.multiply(operand) // CA
+const sbtr = num.subtract(1) // A
+const mul = num.multiply('1') // CA
 const mod = num.remainder(operand) // A
-const div = num.divide(operand) // CA
+const div = num.divide(1) // CA
 ```
 
-You can find all arithmetical operations on number instance.
-> NOTE: 
-> - When using **subtract** method, If number less than _ArgumentNumber_, result will be **undefined**.
-> - When using **divide** method, If number less than _ArgumentNumber_, result will be **number.system(0)**.
+Theres also **increment** and **decrement** methods at you serivce sir:
+```javascript
+num.increment() // same as num.add(1)
+num.decrement() // same as num.subtract(1)
+```
+> NOTE:
+> 1. If Result is **negative** when using arithmentical operations, **undefined** will be returned.
+> 1. When using **divide** method, If **divider** equals to **0**, **undefined** will be returned,
+else integer part of division will be taken as result **(when result is negative, see case 1)**.
+> 1. When using **remainder** method, if **divider** equals to **0**, **undefined** will be returned,
+else **NonNegative** remainder will be taken as result **(when result is negative, see case 1)**.
 
 You can also compare numbers values with static methods of NumberSystem.
 ``` javascript
@@ -71,18 +77,6 @@ NumberSystem.ne(num1, num2) // not equal
 NumberSystem.e(num1, num2) // equal
 ```
 
-Or check if they are equal both by system instances and values.
-```javascript
-const sys4 = new NumberSystem(['A', 'B', 'C', 'D'])
-const sys2 = new NumberSystem(['O', 'L'])
-const sys2Another = new NumberSystem(['O', 'L'])
-
-sys2(1).equals(sys2(1)) === true
-
-sys2(1).equals(sys4(1)) === false
-sys2(1).equals(sys2Another(1)) === false
-```
-
 You can get digit at appropriate index **( 0 based )** read from left.
 ``` javascript
 const sys3 = new NumberSystem(['0', '1', '2'])
@@ -90,16 +84,50 @@ const sys3 = new NumberSystem(['0', '1', '2'])
 const num = sys3([2, 2, 1, 0, 0])
 
 console.log(
-    num.getDigit(0).toString(), // 2
-    num.getDigit(1).toString(), // 2
-    num.getDigit(2).toString(), // 1
-    num.getDigit(3).toString(), // 0
-    num.getDigit(4).toString(), // 0
+    num[0].toString(), // 2
+    num[1].toString(), // 2
+    num[2].toString(), // 1
+    num[3].toString(), // 0
+    num[4].toString(), // 0
 )
 
-console.log(num.getDigit(10)) // undefined
+console.log(num[10]) // undefined
 ```
 > NOTE: For not existing digits **undefined** will be returned.
+
+You can also use **in** operator to check if digit exists at given index:
+```javascript
+// Continuation of above example.
+console.log(
+    1 in num // true
+
+    -1 in num // false
+    10 in num // false
+)
+```
+
+You can also iterate through its digits with **for in** and **for of** loops, note
+that **for of** loop in this case is much more **faster**.
+```javascript
+const sys3 = new NumberSystem(['0', '1', '2'])
+
+const num = sys3([2, 2, 1, 0, 0])
+
+for(const index in num) {
+    console.log(num[index].toNumber())
+}
+
+for(const dig of num) {
+    console.log(dig.toNumber())
+}
+
+// existing digit indexes
+console.log(Object.keys(num)) // [ '0', '1', '2', '3', '4' ]
+// existing digits
+console.log(Object.values(num).map(dig => dig.toString())) // [ '2', '2', '1', '0', '0' ]
+```
+
+
 
 You can get **generator of digits** for current number:
 ``` javascript
@@ -108,7 +136,7 @@ const sys3 = new NumberSystem(['0', '1', '2'])
 const num = sys3([2, 2, 1, 0, 0])
 
 const start = 0
-const end = num.digitsCount - 1
+const end = num.length - 1
 const step = 1
 
 const digGen = num.digGenerator(start, end, step)
@@ -123,23 +151,13 @@ for(const dig of digGen) {
 // 0
 ```
 > NOTE:
-> - You can omit **_end/step_** then they will be set to **_(num.digitsCount - 1)/1_** appropriately.
+> - You can omit **_end/step_** then they will be set to **_(num.length - 1)/1_** appropriately.
 > - If **start** or **end** less than **0**, then **0** will be 
 used accordingly for **start** or **end**.
-> - If **start** or **end** more than **num.digitsCount - 1**, then **num.digitsCount - 1** will be used accordingly for **start** or **end**.
+> - If **start** or **end** more than **num.length - 1**, then **num.length - 1** will be used accordingly for **start** or **end**.
 > - If **step** less or equal than **0** then **1** will be used as **step**.
 
-You can iterate through number digits using **for of** on number instances:
-```javascript
-const sys3 = new NumberSystem(['0', '1', '2'])
-
-const num = sys3([2, 2, 1, 0, 0])
-for(const dig of num) {
-    console.log(dig.toNumber())
-}
-```
-
-You can get Generator of numbers of NumberSystem instance.
+You can get **generator of numbers** of NumberSystem instance.
 ``` javascript
 const sys2 = new NumberSystem(['0', '1'])
 const sys3 = new NumberSystem(['a', 'b', 'c'])
@@ -162,7 +180,7 @@ for(const num3 of numGen) {
 used accordingly for **start** or **end**.
 > - If **step** less or equal than **0** then **1** will be used as **step**.
 
-You can get minimum or maximum numbers in rank:
+You can get minimum or maximum numbers in **rank**:
 ```javascript
 const sys3 = new NumberSystem(['0', '1', '3'])
 

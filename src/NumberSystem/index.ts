@@ -1,6 +1,5 @@
 import JSBI from "jsbi"
 import {
-    digitsConfigMixer,
     isDigitsConfig,
     powersArrToDecimal,
 } from "../utils"
@@ -696,6 +695,28 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
         })()
         Object.setPrototypeOf(NumberSystemInstance, NumberSystem.prototype)
 
+        Object.defineProperties(NumberSystemInstance, {
+            digits: {
+                value: undefined,
+                writable: true,
+            },
+            base: {
+                value: undefined,
+                writable: true,
+            },
+            baseBigInt: {
+                value: undefined,
+                writable: true,
+            },
+            _minInRankMap: {
+                value: undefined,
+                writable: true,
+            },
+            _maxInRankMap: {
+                value: undefined,
+                writable: true,
+            },
+        })
 
         if (isDigitsConfig(digits)) {
             NumberSystemInstance.digits = digits
