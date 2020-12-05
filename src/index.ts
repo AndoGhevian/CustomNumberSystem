@@ -2,7 +2,8 @@ export {
     CharGroupInstance,
     CharGroupConstructor,
     CharGroup,
-} from './CharGroup'
+    digitsConfigMixer,
+} from './DigitsConfig'
 
 export {
     NSNumber,
@@ -12,7 +13,6 @@ export {
 } from './NumberSystem'
 
 export {
-    digitsConfigMixer,
     isDigitsConfig,
 } from './utils'
 
