@@ -1,6 +1,6 @@
 {
   "name": "custom-number-system",
-  "version": "4.1.0",
+  "version": "4.1.1",
   "description": "Work with numbers of custom system you defined",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
