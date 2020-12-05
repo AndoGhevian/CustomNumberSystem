@@ -1,4 +1,4 @@
-import { IDigitsConfig } from "../commonTypes"
+import { IDigitsConfig } from "../../commonTypes"
 
 
 export interface CharGroupInstance extends IDigitsConfig { }
