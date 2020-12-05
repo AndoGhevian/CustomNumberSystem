@@ -1,6 +1,7 @@
 import JSBI from "jsbi"
 import {
     isDigitsConfig,
+    isNonNegativeInt,
     powersArrToDecimal,
 } from "../utils"
 
@@ -380,10 +381,12 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                 }
                 return new Proxy(this, {
                     has: function (target, p) {
-                        if (typeof p === 'symbol' || isNaN(+p)) {
+                        if (typeof p === 'symbol' || !isNonNegativeInt(p)) {
                             return p in target
                         }
-                        return +p >= 0 && target.length > +p
+
+                        const pNum = +p
+                        return +pNum >= 0 && target.length > +pNum
                     },
                     ownKeys: function (target) {
                         if (!target._ownKeys) {

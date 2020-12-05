@@ -22,11 +22,24 @@ export function powersArrToDecimal(powers: number[], base: number) {
  * Checks if provided object satisfies **IDigitsConfig** interface
  * @param obj - obj to check if it is satisfy **IDigitsConfig** interface.
  */
-export const isDigitsConfig = function (obj: any): obj is IDigitsConfig {
+export function isDigitsConfig(obj: any): obj is IDigitsConfig {
     if (!(obj instanceof Object)) return false
     if (typeof obj.maxBase !== 'number' || obj.maxBase < 2) return false
     if (typeof obj.base !== 'number' || obj.base < 2 || obj.base > obj.maxBase) return false
     if (typeof obj.digGen !== 'function') return false
 
+    return true
+}
+
+/**
+ * Checks if number is non negative integer(or its string representation)
+ * @param val - value to check.
+ */
+export function isNonNegativeInt(val: string | number) {
+    const valStr = val + ''
+    const intPart = parseInt(valStr)
+    if(isNaN(intPart) || intPart < 0 || (intPart + '') !== valStr) {
+        return false
+    }
     return true
 }
