@@ -39,13 +39,6 @@ export interface NSNumber<S extends NumberSystemInstance<any>> extends Iterable<
      */
     digGenerator(start: number, end?: number, step?: number): Generator<NSNumber<S>>
     /**
-     * Returnes digit at given position.
-     * @param position - Index of digit to return.
-     * 
-     * **MUST** be integer.
-     */
-    getDigit(position: number): NSNumber<S> | undefined
-    /**
      * Adds two _NSNumber_ instances.
      * 
      * Result will be _NSNumber_ of **CurrentNsNumber.system**.
@@ -125,6 +118,13 @@ export interface NSNumberPrivate<S extends NumberSystemInstance<any>> extends NS
     _ownKeys: (string | symbol | number)[] | undefined
 
     mapToArr(): void
+    /**
+     * Returnes digit at given position.
+     * @param position - Index of digit to return.
+     * 
+     * **MUST** be integer.
+     */
+    getDigit(position: number): NSNumber<S> | undefined
     /**
      * Returns power of digit at give position of current number, or _undefined_ if not existing digit position provided.
      * @param position - Index of digit to return power for.
