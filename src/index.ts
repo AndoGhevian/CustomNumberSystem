@@ -5,7 +5,6 @@ export {
 } from './CharGroup'
 
 export {
-    isNsNumber,
     NSNumber,
     NumberSystemInstance,
     NumberSystemConstructor,
