@@ -396,7 +396,7 @@ export const NumberSystem: NumberSystemConstructor = (function (): NumberSystemC
                         return target._ownKeys
                     },
                     getOwnPropertyDescriptor: function (target, p) {
-                        if (typeof p === 'symbol' || isNaN(+p)) {
+                        if (typeof p === 'symbol' || !isNonNegativeInt(p)) {
                             return Reflect.getOwnPropertyDescriptor(target, p)
                         }
                         return { configurable: true, enumerable: true, value: undefined, writable: false }
