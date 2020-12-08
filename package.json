@@ -16,13 +16,17 @@
     "NumberSystem",
     "DigitsGenerator",
     "NumberGenerator",
-    "numbers",
+    "number",
     "system",
     "custom",
     "generator",
     "digits",
     "surrogate pairs",
-    "number base"
+    "math",
+    "bigint",
+    "cast",
+    "integer",
+    "arithmetic"
   ],
   "author": "Ando",
   "repository": {
