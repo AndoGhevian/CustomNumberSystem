@@ -175,7 +175,7 @@ export interface NumberSystemInstance<T extends IDigitsConfig | string[]> {
      * 
      * **Default: 1**
      */
-    numberGenerator(start: NSNumber<any>, end?: NSNumber<any>, step?: NSNumber<any>): NSNumber<NumberSystemInstance<T>>
+    numberGenerator(start: NSNumber<any>, end?: NSNumber<any>, step?: NSNumber<any>): Generator<NSNumber<NumberSystemInstance<T>>>
     /**
      * Generates maximum _NSNumber_ of current _NumberSystem_ within given _rank_.
      * @param rank - rank of number to generate. **MUST** be positive integer.
